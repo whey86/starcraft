@@ -1,21 +1,36 @@
-@font-face {
+/*@font-face {
   font-family: 'scfont';
   src: url('../font/starcraft.ttf');
-}
+}*/
+
+    @font-face {
+     font-family: "scfont";
+     src: url('scfont.ttf') format('truetype');
+     font-weight:bold;
+     font-style:normal;
+    }
+
+
 body{
+	font-family: 'scfont';
 	background: url("../img/board.jpg");
 	background-size : cover;
 }
 
 .panel{
+	opacity: 0;
 	width: 600px;
 	height: 400px;
 	background: url(../img/metal.jpg);
+	background-size: cover;
 	border-radius: 10px;
 	border :5px solid #2C3539;
 	position: absolute;
 	top : 50%;
-	left : 50%;
-	margin-left: -300px;
 	margin-top:  -200px;
+	text-align:  center;
 }
+.panel h1{
+	text-align: center;
+}
+
