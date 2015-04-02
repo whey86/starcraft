@@ -12,9 +12,12 @@
 
 
 body{
+	width: 100%;
+	height: 100%;
 	font-family: 'scfont';
 	background: url("../img/board.jpg");
 	background-size : cover;
+	float : left;
 }
 
 .panel{
@@ -36,4 +39,17 @@ body{
 .raceicon{
 	width : 50px;
 	height :50px;
+}
+
+#scorepanel{
+	width: 20%;
+	height: 100%;
+	background-color: white;
+	float : left;
+
+}
+#playboard{
+	float : left;
+	width : 80%;
+	height : vh;
 }

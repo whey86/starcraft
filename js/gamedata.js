@@ -1,22 +1,26 @@
 var gameData = {
+	//Number of players
 	playerSize : null,
-	player: null,
+	//Array with player data
+	players: null,
+	//Diffrent phases of the game
 	gamePhases : ["Deployment", "Attack", "Achievment", "Movement"],
+	//Currrent gamephase
 	gamePhase : 0,
+	turn : 0
 
 }
 var players = [
-{color: "purple", race : "zerg"},
-{color: "orange", race : "protoss"},
-{color: "blue", race : "terran"},
-{color: "red", race : "terran"},
-{color: "yellow", race : "protoss"},
-{color: "brown", race : "zerg"}
+{color: "purple", race : "zerg", name: ""},
+{color: "orange", race : "protoss", name: ""},
+{color: "blue", race : "terran", name: ""},
+{color: "red", race : "terran", name: ""},
+{color: "yellow", race : "protoss", name: ""},
+{color: "brown", race : "zerg", name: ""}
 ]
 var player = {
 	name : null,
-	race : null,
-	color : null
+	faction : null,
 }
 var maps = [
 	// Three players
