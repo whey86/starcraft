@@ -33,4 +33,7 @@ body{
 .panel h1{
 	text-align: center;
 }
-
+.raceicon{
+	width : 50px;
+	height :50px;
+}
