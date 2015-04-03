@@ -97,11 +97,40 @@ removePanel : function(id,callback){
 },
 
 addPanel : function(id,callback){
-	console.log("adding panel ...");
+	console.log("adding panel " + id);
 	$(id).animate({
 			//genomskinlighet
 			'opacity': 100.0,
-			'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width'))) / 2+ 'px'
+			'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width')))/3 + 'px'
 		}, 1000, callback());
+},
+territoriumPanel : function(territorium,id){
+	var temp = id.split(" ");
+	var planet = parseInt(temp[0]);
+	var area = parseInt(temp[1]);
+	console.log(temp);
+	console.log(planet);
+	console.log(area);
+	$("body").append("<div class='panel' id='territorium'></div>");
+	$("#territorium").append("<h1></<h1>");
+
+	panel.addPanel("#territorium",function(){
+		$('map area').off('click');
+		$("#territorium h1").text(territorium.toUpperCase());
+		$("#territorium").append("<h1> Units : "+maps[gameData.playerSize-3].planets[planet].territories[area].units+"</<h1>");
+		$("#territorium").append("<h1> Color : "+maps[gameData.playerSize-3].planets[planet].territories[area].color+"</<h1>");
+						//Button and action to finish 
+						$("#territorium").append('<input id="btnDoneTerr" type="button" value="Done"  style="width:100px">');
+						$("#territorium").bind('click',function(){
+
+							panel.removePanel("#territorium",function(){
+								$("#territorium").remove();
+
+								$('map area').bind('click',function(){
+									areaClick($(this).attr('alt'),$(this).attr('title'));
+								});
+							});
+						});
+					});
 }
 }
