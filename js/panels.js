@@ -115,22 +115,53 @@ territoriumPanel : function(territorium,id){
 	$("#territorium").append("<h1></<h1>");
 
 	panel.addPanel("#territorium",function(){
+
+		var color = maps[gameData.playerSize-3].planets[planet].territories[area].color;
+		$("#territorium").css('background-image', 'none');
+		$("#territorium").css("background-color", color);
 		$('map area').off('click');
 		$("#territorium h1").text(territorium.toUpperCase());
-		$("#territorium").append("<h1> Units : "+maps[gameData.playerSize-3].planets[planet].territories[area].units+"</<h1>");
-		$("#territorium").append("<h1> Color : "+maps[gameData.playerSize-3].planets[planet].territories[area].color+"</<h1>");
-						//Button and action to finish 
-						$("#territorium").append('<input id="btnDoneTerr" type="button" value="Done"  style="width:100px">');
-						$("#territorium").bind('click',function(){
+			$("#territorium").append('<div id="unitscontainer" class="panelcontainer"/>');
+		$("#unitscontainer").append('<input id="btnUnitsMinus" class="btnPanel" type="button" value="-" />');
+		$("#unitscontainer").append("<h1 id='units'> Units : "+maps[gameData.playerSize-3].planets[planet].territories[area].units+"</h1>");
+		$("#unitscontainer").append('<input id="btnUnitsPlus" class="btnPanel" type="button" value="+"  />');
+			$("#territorium").append('<div id="colorcontainer" class="panelcontainer" />');
 
-							panel.removePanel("#territorium",function(){
-								$("#territorium").remove();
+		$("#colorcontainer").append('<input id="btnColorNext" class="btnPanel" type="button" value="Next" />');
+		$("#colorcontainer").append("<h1 id='color'> Color : "+color+"</h1>");
+		//Button and action to finish 
+		$("#territorium").append('<input id="btnDoneTerr" class="btnPanel" type="button" value="Done"/>');
+		$("#btnDoneTerr").bind('click',function(){
 
-								$('map area').bind('click',function(){
-									areaClick($(this).attr('alt'),$(this).attr('title'));
-								});
-							});
-						});
-					});
+			panel.removePanel("#territorium",function(){
+				$("#territorium").remove();
+
+				$('map area').bind('click',function(){
+					areaClick($(this).attr('alt'),$(this).attr('title'));
+				});
+			});
+		});
+		$("#btnUnitsMinus").bind('click',function(){
+			maps[gameData.playerSize-3].planets[planet].territories[area].units--;
+			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
+		});
+			$("#btnUnitsPlus").bind('click',function(){
+			maps[gameData.playerSize-3].planets[planet].territories[area].units++;
+			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
+		});
+		$("#btnColorNext").bind('click',function(){
+			
+					for (var i = 0; i < gameData.players.length; i++) {
+						if(gameData.players[i].color === color){
+							color = gameData.players[(i+1) % (4)].color
+								console.log((i+1) % (4));
+								break;
+						}
+					};
+	console.log(color);
+			$("#territorium").css("background-color", color);
+						$("#color").text("Color : " + color);
+		});
+	});
 }
 }
