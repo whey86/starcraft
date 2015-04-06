@@ -121,11 +121,11 @@ territoriumPanel : function(territorium,id){
 		$("#territorium").css("background-color", color);
 		$('map area').off('click');
 		$("#territorium h1").text(territorium.toUpperCase());
-			$("#territorium").append('<div id="unitscontainer" class="panelcontainer"/>');
+		$("#territorium").append('<div id="unitscontainer" class="panelcontainer"/>');
 		$("#unitscontainer").append('<input id="btnUnitsMinus" class="btnPanel" type="button" value="-" />');
 		$("#unitscontainer").append("<h1 id='units'> Units : "+maps[gameData.playerSize-3].planets[planet].territories[area].units+"</h1>");
 		$("#unitscontainer").append('<input id="btnUnitsPlus" class="btnPanel" type="button" value="+"  />');
-			$("#territorium").append('<div id="colorcontainer" class="panelcontainer" />');
+		$("#territorium").append('<div id="colorcontainer" class="panelcontainer" />');
 
 		$("#colorcontainer").append('<input id="btnColorNext" class="btnPanel" type="button" value="Next" />');
 		$("#colorcontainer").append("<h1 id='color'> Color : "+color+"</h1>");
@@ -145,23 +145,31 @@ territoriumPanel : function(territorium,id){
 			maps[gameData.playerSize-3].planets[planet].territories[area].units--;
 			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
 		});
-			$("#btnUnitsPlus").bind('click',function(){
+		$("#btnUnitsPlus").bind('click',function(){
 			maps[gameData.playerSize-3].planets[planet].territories[area].units++;
 			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
 		});
 		$("#btnColorNext").bind('click',function(){
 			
-					for (var i = 0; i < gameData.players.length; i++) {
-						if(gameData.players[i].color === color){
-							color = gameData.players[(i+1) % (4)].color
-								console.log((i+1) % (4));
-								break;
-						}
-					};
-	console.log(color);
+			for (var i = 0; i < gameData.players.length; i++) {
+				if(gameData.players[i].color === color){
+					color = gameData.players[(i+1) % (4)].color
+					console.log((i+1) % (4));
+					break;
+				}
+			};
+			maps[gameData.playerSize-3].planets[planet].territories[area].color = color;
 			$("#territorium").css("background-color", color);
-						$("#color").text("Color : " + color);
+			$("#color").text("Color : " + color);
 		});
 	});
 }
+}
+
+var scorePanelData ={
+	toggleTitle : 'Map color',
+	toggleTitleHHTML : "'<h2 id='titleToggle'></h2>'",
+	toggleColorHTML : '<div class="toggle-btn-grp joint-toggle"><label onclick="" id="on" class="toggle-btn success"><input id="toggleOn" type="radio" name="group3"/>On</label><label onclick="" id="off" class="toggle-btn"><input id="toggleOff" type="radio" name="group3"/>Off</label></div>'
+
+
 }
