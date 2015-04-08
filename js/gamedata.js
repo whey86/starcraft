@@ -8,16 +8,19 @@ var gameData = {
 	//Startphases
 	startphases : ["Base", "Units", "Hero"],
 	//Current startphase, if over 2, startphase is over
-	starphase : 0,
+	startPhase : 0,
 	//Diffrent phases of the game
 	gamePhases : ["Deployment", "Attack", "Achievment", "Movement"],
 	//Currrent gamephase
 	gamePhase : 0,
 	turn : 0,
-
+	baseCount : 0,
+	heroCount : 0,
+	unitCount : [],
 	map : null,
 	//Starting units for number of players -> 3, 4 ,5 , 6
-	startUnits : [30,25,20,15]
+	startUnits : [30,25,20,15],
+	unitsOut :0
 
 
 
@@ -42,6 +45,101 @@ var mapskelleton = {
 var territorySkelleton = {
 	name : null, color : null, hero : false, units : 0, adjacent : [{area : 0, territory : 0}] 
 }
+var freemap = {
+		order : null,
+		size : null,
+		premade: false,
+		mapSize : 42,
+		area : [
+		{
+			name : "Char",
+			bonus : 7,
+			territories : [
+			{ name : "Char aleph", color : "", hero : false, units : 0, adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Glass flats", color : "", hero : false, units : 0 },
+			{ name : "Burning rift", color : "", hero : false, units : 0 },
+			{ name : "Death valley", color : "", hero : false, units : 0 },
+			{ name : "Bone trench", color : "", hero : false, units : 0 },
+			{ name : "Dauntless plateau", color : "", hero : false, units : 0 },
+			{ name : "Hells gates", color : "", hero : false, units : 0 },
+			{ name : "Nydus network", color : "", hero : false, units : 0 },
+			{ name : "Primary hive cluster", color : "", hero : false, units : 0 },
+			{ name : "Acid marsh", color : "", hero : false, units : 0 },
+			{ name : "Eris", color : "", hero : false, units : 0 },
+			{ name : "Ate", color : "", hero : false, units : 0 }
+			]
+		},
+		{
+			name : "Korhal",
+			bonus : 5,
+			territories : [
+			{ name : "Wolfrec province", color : "", hero : false, units : 0 },
+			{ name : "Keresh province", color : "", hero : false, units : 0 },
+			{ name : "Augustgrad", color : "", hero : false, units : 0 },
+			{ name : "Radiated wastes", color : "", hero : false, units : 0 },
+			{ name : "Ruins of styrling", color : "", hero : false, units : 0 },
+			{ name : "Ursa", color : "", hero : false, units : 0},
+			{ name : "Canis", color : "", hero : false, units : 0 },
+			]
+
+		},
+		{
+			name : "Aiur",
+			bonus : 5,
+			territories : [
+			{ name : "Saalok", color : "", hero : false, units : 0 },
+			{ name : "Temple of the preservers", color : "", hero : false, units :0 },
+			{ name : "The great forum", color : "", hero : false, units : 0 },
+			{ name : "Antioch province", color : "", hero : false, units : 0},
+			{ name : "Scion province", color : "", hero : false, units : 0 },
+			{ name : "Remains of the overmind", color : "", hero : false, units : 0 },
+			{ name : "Feral hives", color : "", hero : false, units : 0 },
+
+			{ name : "Velari province", color : "", hero : false, units : 0 },
+			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false},
+
+			]
+		},
+		//3
+		{
+			name : "Zerus",
+			bonus : 2,
+			territories : [
+			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false },
+			{ name : "SundeD50000 valley", color : "", hero : false, units : 0 },
+			{ name : "Fulmic highlands", color : "", hero : false, units : 0 },
+			{ name : "Volatile cleft", color : "", hero : false, units : 0 }
+			]
+		},
+		//4
+		{
+			name : "Mar sara",
+			bonus : 3,
+			territories : [
+			{ name : "Thisby", color : "", hero : false, units : 0 },
+			{ name : "Backwater station", color : "", hero : false, units : 0, base : false },
+			{ name : "Diamondback wastelands", color : "", hero : false, units : 0 },
+			{ name : "Riksville", color : "", hero : false, units : 0 },
+			{ name : "Jacobs installation", color : "", hero : false, units : 0 },
+			{ name : "Pyramus", color : "", hero : false, units : 0 },
+			]
+		},
+		{
+			name : "Shakuras",
+			bonus : 2,
+			territories : [
+			{ name : "Rajal", color : "", hero : false, units : 0, base : false },
+			{ name : "Katuul province", color : "", hero : false, units : 0 },
+			{ name : "Talematros", color : "", hero : false, units :0 },
+			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0 }
+			]
+		}
+		]
+
+
+	};
+
+
 var maps = [
 	// Three players
 	{},
@@ -50,6 +148,7 @@ var maps = [
 		order : [3,4,0,2],
 		size : 4,
 		premade: false,
+		mapSize : 42,
 		area : [
 		{
 			name : "Char",

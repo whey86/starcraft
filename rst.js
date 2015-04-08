@@ -72,6 +72,18 @@ function gameControl (d,m){
 	var self = this
 	var map = m;
 	var data = d;
+	var ui;
+
+	/****************Set variables*********************/
+	this.setGameData = function(model){
+		data = model;
+	};
+	this.setMap = function(model){
+		map = model;
+	};
+	this.setUIControl= function  (uic) {
+		ui = uic;
+	}
 	/******************Game states***************************/
 
 	this.getStartPhase = function(){
@@ -97,12 +109,7 @@ function gameControl (d,m){
 	this.nextGamePhase = function(){
 		return data.gamePhase = (data.gamePhase+1) % (data.gamePhases.length);
 	};
-	this.setGameData = function(model){
-		data = model;
-	};
-	this.setMap = function(model){
-		map = model;
-	};
+
 	this.isStartPhase = function(){
 		if(data.startPhase<3)
 		{
@@ -114,8 +121,11 @@ function gameControl (d,m){
 		};
 	};
 
-	//Number of players
+	//Number of players (sets startunits at the same time)
 	this.setPlayerSize = function(size){
+		for (var i = 0; i < size; i++) {
+			data.unitCount[i] = data.startUnits[size-2];
+		};
 		data.playerSize = size;
 	}
 	this.getPlayerSize = function(){
@@ -125,6 +135,9 @@ function gameControl (d,m){
 	//Set continer of players
 	this.setPlayers = function(players){
 		data.players= players;
+	}
+	this.getCurrentPlayer = function(){
+		return data.players[data.turn];
 	}
 	//Set player race
 	this.setPlayerRace = function(index, race){
@@ -168,9 +181,6 @@ function gameControl (d,m){
 	};
 	//int of area, int territory, int number of units added
 	this.getColor = function(area, territory){
-		console.log(area);
-		console.log(territory);
-		console.log(map);
 		return map.area[area].territories[territory].color;
 	};
 	//int of area, int territory, int number of units added
@@ -192,6 +202,7 @@ function gameControl (d,m){
 		else{return false;}
 	};
 	this.isFree = function(area, territory){
+		console.log(map);
 		var color = map.area[area].territories[territory].color;
 		if( color == null || color == ""){return true;} else{return false;} 
 	}
@@ -219,6 +230,7 @@ function gameControl (d,m){
 	}
 	this.addReinforcement = function(){
 		if(self.isFree(area, territory)){
+			console.log("is free");
 			map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].units++;
 			return true;
@@ -226,6 +238,13 @@ function gameControl (d,m){
 			return false;
 		}
 	};
+	this.getStartSum = function(){
+		var sum = 0;
+		for (var i = 0; i < data.startUnitCount.length; i++) {
+			sum += data.unitCount[i];
+		};
+		return;
+	}
 	//Attack an other territory
 	//int of area, int territory, int number of units to attack with, array with dices, defender area and territory
 	// returns true if opponent was defeated
@@ -288,9 +307,87 @@ function gameControl (d,m){
 		};
 		return false;
 	}
+		//Set how a territory should react on click depending on phase
+		var startPhaseFunctions = [
+				//Startphase 1´0
+    			//Bases left to deploy
+    			function (con, area,territory) {
 
-	//UI control
-}
+    				console.log("click 1");
+    				console.log(data.baseCount);
+    				console.log(data.playerSize);
+    				if(data.baseCount < data.playerSize){
+    				//Place base if territory dont have a base and finish turn
+    				if(con.addBase(area,territory)){
+    					console.log("Base placed");
+    					data.baseCount++;
+    					con.turnComplete();
+    				}
+    				return;
+    			}else{
+    				con.nextStartPhase();
+    			}	},
+    			function (con,area,territory) {
+    				console.log("click 2");
+    				if(data.unitCount[data.turn] > 0 ){
+    					//cant place on busy area
+    					if(data.unitsOut>=map.mapSize){
+    						if(this.getPlayerColor(data.turn) == getColor(area,territory)){
+    							con.addUnits(area,territory,1);
+    							data.unitsOut++;
+    							data.unitCount[data.turn]-1;
+    							console.log("unit placed");
+    							con.turnComplete();
+    							return;
+    						}
+    					}
+    					//all areas are taken, can place on busy area
+    					else{
+    						if(con.addReinforcement){
+    							data.unitCount[data.turn]-1;
+    							data.unitsOut++;
+    							console.log("unit placed");
+    							con.turnComplete();
+    							return;
+    						}
+    						return;
+    					}
+    				}
+    				else{
+    					con.turnComplete();
+    				}
+    				con.nextStartPhase();
+    			}
+    			,
+    			function (area,territory) {
+    				console.log("click 3");
+    				if(data.heroCount < data.playerSize){
+    					if(con.addHero(area, territory)){
+    						data.heroCount++;
+    						console.log("hero placed");
+    						return;
+    					}
+    					return;
+
+    				}
+    				con.nextStartPhase();
+    			}
+
+    			];
+    			this.territoryClick = function(obj){
+    				console.log("Phase : " + data.startPhase);
+    				console.log("Turn : " + data.turn);
+    				var pos = $(obj[0]).attr('title').split(" ");
+    				var area = parseInt(pos[0]);
+    				var territory = parseInt(pos[1]);
+    				if(this.isStartPhase){
+    					console.log(data.startPhase);
+    					startPhaseFunctions[data.startPhase](self,area,territory);
+    				}
+    			}
+    		}
+
+
 
 
 var gameData = {
@@ -301,16 +398,19 @@ var gameData = {
 	//Startphases
 	startphases : ["Base", "Units", "Hero"],
 	//Current startphase, if over 2, startphase is over
-	starphase : 0,
+	startPhase : 0,
 	//Diffrent phases of the game
 	gamePhases : ["Deployment", "Attack", "Achievment", "Movement"],
 	//Currrent gamephase
 	gamePhase : 0,
 	turn : 0,
-
+	baseCount : 0,
+	heroCount : 0,
+	unitCount : [],
 	map : null,
 	//Starting units for number of players -> 3, 4 ,5 , 6
-	startUnits : [30,25,20,15]
+	startUnits : [30,25,20,15],
+	unitsOut :0
 
 
 
@@ -335,6 +435,101 @@ var mapskelleton = {
 var territorySkelleton = {
 	name : null, color : null, hero : false, units : 0, adjacent : [{area : 0, territory : 0}] 
 }
+var freemap = {
+		order : null,
+		size : null,
+		premade: false,
+		mapSize : 42,
+		area : [
+		{
+			name : "Char",
+			bonus : 7,
+			territories : [
+			{ name : "Char aleph", color : "", hero : false, units : 0, adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Glass flats", color : "", hero : false, units : 0 },
+			{ name : "Burning rift", color : "", hero : false, units : 0 },
+			{ name : "Death valley", color : "", hero : false, units : 0 },
+			{ name : "Bone trench", color : "", hero : false, units : 0 },
+			{ name : "Dauntless plateau", color : "", hero : false, units : 0 },
+			{ name : "Hells gates", color : "", hero : false, units : 0 },
+			{ name : "Nydus network", color : "", hero : false, units : 0 },
+			{ name : "Primary hive cluster", color : "", hero : false, units : 0 },
+			{ name : "Acid marsh", color : "", hero : false, units : 0 },
+			{ name : "Eris", color : "", hero : false, units : 0 },
+			{ name : "Ate", color : "", hero : false, units : 0 }
+			]
+		},
+		{
+			name : "Korhal",
+			bonus : 5,
+			territories : [
+			{ name : "Wolfrec province", color : "", hero : false, units : 0 },
+			{ name : "Keresh province", color : "", hero : false, units : 0 },
+			{ name : "Augustgrad", color : "", hero : false, units : 0 },
+			{ name : "Radiated wastes", color : "", hero : false, units : 0 },
+			{ name : "Ruins of styrling", color : "", hero : false, units : 0 },
+			{ name : "Ursa", color : "", hero : false, units : 0},
+			{ name : "Canis", color : "", hero : false, units : 0 },
+			]
+
+		},
+		{
+			name : "Aiur",
+			bonus : 5,
+			territories : [
+			{ name : "Saalok", color : "", hero : false, units : 0 },
+			{ name : "Temple of the preservers", color : "", hero : false, units :0 },
+			{ name : "The great forum", color : "", hero : false, units : 0 },
+			{ name : "Antioch province", color : "", hero : false, units : 0},
+			{ name : "Scion province", color : "", hero : false, units : 0 },
+			{ name : "Remains of the overmind", color : "", hero : false, units : 0 },
+			{ name : "Feral hives", color : "", hero : false, units : 0 },
+
+			{ name : "Velari province", color : "", hero : false, units : 0 },
+			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false},
+
+			]
+		},
+		//3
+		{
+			name : "Zerus",
+			bonus : 2,
+			territories : [
+			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false },
+			{ name : "SundeD50000 valley", color : "", hero : false, units : 0 },
+			{ name : "Fulmic highlands", color : "", hero : false, units : 0 },
+			{ name : "Volatile cleft", color : "", hero : false, units : 0 }
+			]
+		},
+		//4
+		{
+			name : "Mar sara",
+			bonus : 3,
+			territories : [
+			{ name : "Thisby", color : "", hero : false, units : 0 },
+			{ name : "Backwater station", color : "", hero : false, units : 0, base : false },
+			{ name : "Diamondback wastelands", color : "", hero : false, units : 0 },
+			{ name : "Riksville", color : "", hero : false, units : 0 },
+			{ name : "Jacobs installation", color : "", hero : false, units : 0 },
+			{ name : "Pyramus", color : "", hero : false, units : 0 },
+			]
+		},
+		{
+			name : "Shakuras",
+			bonus : 2,
+			territories : [
+			{ name : "Rajal", color : "", hero : false, units : 0, base : false },
+			{ name : "Katuul province", color : "", hero : false, units : 0 },
+			{ name : "Talematros", color : "", hero : false, units :0 },
+			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0 }
+			]
+		}
+		]
+
+
+	};
+
+
 var maps = [
 	// Three players
 	{},
@@ -343,6 +538,7 @@ var maps = [
 		order : [3,4,0,2],
 		size : 4,
 		premade: false,
+		mapSize : 42,
 		area : [
 		{
 			name : "Char",
@@ -437,53 +633,36 @@ var maps = [
 var gameLoop = function(control){
 	var isRunning = true;
 	var uicontrol = new UIControl(control);
+	control.setUIControl(uicontrol);
 	uicontrol.setupBoard();
-	//If map is not premade(startup units placed), start unitplacment
-	if(control.isStartPhase){
-		// placeBase(control);
-	}
-	// while(isRunning){
-			//Set turn
-
-			//Reinforcement phase
-
-			//Attack phase
-
-			//Achivement phase
-
-			//Movement phase
-	// }
+	bindTerritoryClick(control);
+	uicontrol.setTurn(control.getCurrentPlayer);
+	// bindTerritoryClick(control);
 
 };
 
+var setClickFunction = function(control){
+		$("#Map area").bind('click',function(){
+    		alert('unit placed');
+    		var pos = $(this).attr('title').split[" "];
+    		var area = parseInt(pos[0]);
+    		var territory = parseInt(pos[1]);
+    	});
+
+}
 
 
     var areaClick = function(area,id){
     	panel.territoriumPanel(area,id);
     }
-    var placeBase = function(control){
+    var bindTerritoryClick = function(control){
     	$("#Map area").bind('click',function(){
-    		alert('unit placed');
-    		var pos = $(this).attr('title').split[" "];
-    		var area = parseInt(pos[0]);
-    		var territory = parseInt(pos[1]);
+
+    		control.territoryClick($(this));
     	});
     }
 
-    var placeStartUnits = function(control){
 
-
-    	$("#Map area").bind('click',function(){
-    		alert('unit placed');
-    		var pos = $(this).attr('title').split[" "];
-    		var area = parseInt(pos[0]);
-    		var territory = parseInt(pos[1]);
-    		// if(map.area[area].territories[territory].units)  
-    	});
-    }
-    var changeGameState = function(){
-
-    }
 var highlighting = {
 
 	alwaysOn : true,
@@ -504,21 +683,17 @@ var getTerrColor= function(id){
 	var pos2 = pos.split(" ");
 	return maps[gameData.playerSize-3].area[parseInt(pos2[0])].territories[parseInt(pos2[1])].color;
 }
- var game;
+ var myGame;
  $(document).ready(function(){
 
 	// panel.startpanel();
 	             // jQuery('#ImageMap1').maphilight();
 	             // gameLoop();
-	             game = new risk();
-	             game.setMap(maps[1]);
-	             game.start();
+	             myGame = new risk();
+	             myGame.setMap(maps[1]);
+	             myGame.start();
 
 	         });
-
- function gameSetup(){
-
- };
 
 var paneldata ={
 	numberOfPlayers : {
@@ -710,12 +885,12 @@ var scorePanelData ={
 }
 function risk(){
 	var data = gameData;
-	var gamemap = maps[1];
+	var gamemap = freemap;
 	var control; 
 	this.setGameData = function(gamedata){data = gamedata;};
 	this.setMap = function(map){gamemap=map};
 	this.start = function(){
-		var control = new gameControl(data,gamemap);
+	 control = new gameControl(data,freemap);
 		panel.startpanel(control);
 	};
 
@@ -731,16 +906,10 @@ function risk(){
 function UIControl(c){
 	var self =this;
 	this.control = c;
-	this.setupBoard = function(){
 		$("body").css("float","left");
 		$("body").css('background-image', 'none');
 		$("body").css("background-color","black");
 
-	//Adds sidepanel
-	addInfoPanel();
-	//Add board
-	addBoard();
-};
 
 this.setTurn = function(player){
 	$('#titleTurn').text(player.name);
@@ -751,7 +920,7 @@ this.setPhase = function(player){
 	$('#titlePhase').css('color',"#"+ player.color);
 }
 
-var addInfoPanel = function(){
+this.addInfoPanel = function(){
 	$("body").append('<div id="scorepanel"></div>');
 	$("#scorepanel").append("<h1 id='titleTurn' class='score'></h1>");
 	$("#scorepanel").append("<h2 id='titlePhase' class='score'></h1>");
@@ -787,7 +956,7 @@ var addInfoPanel = function(){
 	});
 
 	$('#nextPhase').bind('click',function(){
-		console.log(data);
+		console.log(self.control.getGameData());
 	/*	gameData.gamePhase++;
 		if(gameData.gamePhase>4){
 			gameData.turn = (gameData.turn+1)%4;
@@ -801,7 +970,7 @@ var addInfoPanel = function(){
 
 };
 
-var addBoard = function(){
+this.addBoard = function(){
 	$("body").append('<div id="boardContainer"/>');
 	$("#boardContainer").append(boardImg);
 
@@ -809,20 +978,20 @@ var addBoard = function(){
 	for (var i = 0; i < 42; i++) {
 		$("#Map").append($(area1[i]).attr('id','terr' + i));
 
-		var pos = $("#terr"+i).attr('title');
-		var pos2 = pos.split(" ");
-		console.log(pos2);
-		var color =  self.control.getColor(parseInt(pos2[0]),parseInt(pos2[1]));
-		highlighting.setTerritoriumColor("#terr"+i,color);
+		// var pos = $("#terr"+i).attr('title');
+		// var pos2 = pos.split(" ");
+		// var color =  self.control.getColor(parseInt(pos2[0]),parseInt(pos2[1]));
+		// highlighting.setTerritoriumColor("#terr"+i,color);
 	};
-	$('#playboard').maphilight();
+	$('#playboard').maphilight({strokeColor : "#AAAAAA"});
 
  /* var $span=$('<span class="map_title">'+"30 Units"+'</span>');        
         $span.css({top: 200+'px', left: 200+'px', color : 'purple', "font-size" : '40px', position:'absolute'});
         $span.appendTo('#boardContainer');*/
     }
+this.setupBoard = function(){
+	this.addInfoPanel();
+	this.addBoard();
 
-    this.setTurn = function(){};
-    this.setPhase = function(){};
-    this.setInfoPanel=function(){};
+}
 }

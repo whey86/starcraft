@@ -1,0 +1,11 @@
+Notes!
+
+Gamepanel
+	Turn
+	Phase
+	colorswitch
+
+	infotext <- ->Phase discription,reinforcement
+				->Phase discription, winner of fight
+				->Phase discription, awards achivied
+				->Phase discription, movment left

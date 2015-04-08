@@ -1,15 +1,11 @@
- var game;
+ var myGame;
  $(document).ready(function(){
 
 	// panel.startpanel();
 	             // jQuery('#ImageMap1').maphilight();
 	             // gameLoop();
-	             game = new risk();
-	             game.setMap(maps[1]);
-	             game.start();
+	             myGame = new risk();
+	             myGame.setMap(maps[1]);
+	             myGame.start();
 
 	         });
-
- function gameSetup(){
-
- };
