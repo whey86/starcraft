@@ -2,17 +2,24 @@ function UIControl(c){
 	var self =this;
 	this.control = c;
 	this.setupBoard = function(){
-	$("body").css("float","left");
-	$("body").css('background-image', 'none');
-	$("body").css("background-color","black");
+		$("body").css("float","left");
+		$("body").css('background-image', 'none');
+		$("body").css("background-color","black");
 
 	//Adds sidepanel
 	addInfoPanel();
 	//Add board
 	addBoard();
-
-
 };
+
+this.setTurn = function(player){
+	$('#titleTurn').text(player.name);
+	$('#titleTurn').css('color',"#"+ player.color);
+};
+this.setPhase = function(player){
+	$('#titlePhase').text(player.name);
+	$('#titlePhase').css('color',"#"+ player.color);
+}
 
 var addInfoPanel = function(){
 	$("body").append('<div id="scorepanel"></div>');
@@ -51,7 +58,7 @@ var addInfoPanel = function(){
 
 	$('#nextPhase').bind('click',function(){
 		console.log(data);
-		gameData.gamePhase++;
+	/*	gameData.gamePhase++;
 		if(gameData.gamePhase>4){
 			gameData.turn = (gameData.turn+1)%4;
 			gameData.gamePhase=0;
@@ -59,7 +66,7 @@ var addInfoPanel = function(){
 		$('#titleTurn').text(gameData.players[gameData.turn].name);
 		$('#titleTurn').css('color',"#"+ gameData.players[gameData.turn].color);
 		$('#titlePhase').text(gameData.gamePhases[gameData.gamePhase]);
-		$('#titlePhase').css('color',"white");
+		$('#titlePhase').css('color',"white");*/
 	});
 
 };
@@ -85,7 +92,7 @@ var addBoard = function(){
         $span.appendTo('#boardContainer');*/
     }
 
-	this.setTurn = function(){};
-	this.setPhase = function(){};
-	this.setInfoPanel=function(){};
+    this.setTurn = function(){};
+    this.setPhase = function(){};
+    this.setInfoPanel=function(){};
 }
