@@ -51,29 +51,289 @@ var area1= [
 ,'<area alt="Bone trench" title="0 4" href="#" shape="poly" coords="549,198,550,200,574,224,570,266,576,311,589,352,573,353,561,358,553,353,550,344,537,337,526,343,505,340,495,335,483,352,465,368,462,344,448,317,438,305,450,292,466,262,492,245,496,249,508,249,523,240,540,233,543,221" />'
 , '<area alt="Hells gates" title="0 6" class="noborder icolor00ff00" href="#" shape="poly" coords="382,540,413,549,433,570,447,594,449,604,477,595,505,577,539,558,565,532,577,519,577,491,581,472,523,479,505,474,471,478,445,487,423,495,414,499,386,519"><span>test</span>< /area>'];
 
+var dice = {
+	sides : 6,
+	rollDice : function(){
+		return Math.floor((Math.random() * dice.sides) + 1);
+	},
+	//Rolls muliple dices and returns array with result
+	rollMulti : function(number){
+		var array = new Array(number);
+
+		for (var i = 0; i < number; i++) {
+			array[i] = dice.rollDice();
+		};
+		return array;
+	}
+}
+
+
+function gameControl (d,m){
+	var self = this
+	var map = m;
+	var data = d;
+	/******************Game states***************************/
+
+	this.getStartPhase = function(){
+		return data.startPhases[data.startPhase];
+	};
+	this.nextStartPhase = function(){
+		return data.startPhase++;
+	};
+
+	this.getTurn = function(){
+		return data.turn;
+	};
+	this.turnComplete =  function(){
+		data.turn = (data.turn + 1)%data.playerSize;
+	};
+
+	this.getGamePhase =  function(){
+		return data.gamePhases[gameControl.gameData.phase];
+	};
+	this.getGameData =  function(){
+		return data;
+	};
+	this.nextGamePhase = function(){
+		return data.gamePhase = (data.gamePhase+1) % (data.gamePhases.length);
+	};
+	this.setGameData = function(model){
+		data = model;
+	};
+	this.setMap = function(model){
+		map = model;
+	};
+	this.isStartPhase = function(){
+		if(data.startPhase<3)
+		{
+			return true;
+		}
+		else
+		{
+			return false;
+		};
+	};
+
+	//Number of players
+	this.setPlayerSize = function(size){
+		data.playerSize = size;
+	}
+	this.getPlayerSize = function(){
+		return data.playerSize;
+	}
+
+	//Set continer of players
+	this.setPlayers = function(players){
+		data.players= players;
+	}
+	//Set player race
+	this.setPlayerRace = function(index, race){
+		data.players[index].race = race;
+	}
+	this.getPlayerRace = function(index){
+		return data.players[index].race;
+	}
+	this.getPlayerColor = function(index){
+		return data.players[index].color;
+	}
+	//Set player race
+	this.setPlayerName = function(index, name){
+		data.players[index].name = name;
+	}
+
+	//Territories api
+	//int of area, int territory, int number of units added
+	this.addUnits = function(area, territory, units){
+		map.area[area].territories[territory].units += units;
+	};
+	//int of area, int territory, int number of units removed
+	this.removeUnits = function(area, territory, units){
+		map.area[area].territories[territory].units -= units;
+	};
+	//int of area, int territory, colorcode of owner
+	this.changeControl = function(area, territory, color){
+		map.area[area].territories[territory].color = color;
+	};
+	//int of area, int territory, boolean if base
+	this.setBase = function(area, territory, base){
+		map.area[area].territories[territory].base = base;
+	};
+	//int of area, int territory, boolean if extra value of territoium
+	this.setExtra = function(area, territory, extra){
+		map.area[area].territories[territory].extra = extra;
+	};
+	//int of area, int territory
+	this.getUnits = function(area, territory){
+		return map.area[area].territories[territory].units;
+	};
+	//int of area, int territory, int number of units added
+	this.getColor = function(area, territory){
+		console.log(area);
+		console.log(territory);
+		console.log(map);
+		return map.area[area].territories[territory].color;
+	};
+	//int of area, int territory, int number of units added
+	this.hasHero = function(area, territory){
+		return map.area[area].territories[territory].hero;
+	};
+	this.getAdjacent = function(area, territory){
+		return map.area[area].territories[territory].adjacent;
+	};
+	//move units from one area to another
+	this.moveUnits = function(area1, territory1, area2, territory2, units){
+		//Reduce from current territory
+		map.area[area1].territories[territory1].units -= units;
+		//Add to new territory
+		map.area[area2].territories[territory2].units += units;
+	},
+	this.isDefeated = function(area, territory){
+		if(map.area[area1].territories[territory1].units<=0){ return true;}
+		else{return false;}
+	};
+	this.isFree = function(area, territory){
+		var color = map.area[area].territories[territory].color;
+		if( color == null || color == ""){return true;} else{return false;} 
+	}
+
+	/*************** STARTPHASE ************************/
+
+	this.addHero= function(area, territory){
+		if(map.area[area].territories[territory].color == data.players[data.turn].color){
+			map.area[area].territories[territory].hero = true;
+			return true;
+		}else{
+			return false;
+		}
+		
+	}
+	this.addBase= function(area, territory){
+		if(self.isFree(area, territory)){
+			map.area[area].territories[territory].color = data.players[data.turn].color;
+			map.area[area].territories[territory].base = true;
+			return true;
+		}else{
+			return false;
+		}
+		
+	}
+	this.addReinforcement = function(){
+		if(self.isFree(area, territory)){
+			map.area[area].territories[territory].color = data.players[data.turn].color;
+			map.area[area].territories[territory].units++;
+			return true;
+		}else{
+			return false;
+		}
+	};
+	//Attack an other territory
+	//int of area, int territory, int number of units to attack with, array with dices, defender area and territory
+	// returns true if opponent was defeated
+	this.attack = function(area1, territory1,units, attackroll, area2, territory2, defroll){
+		//Wrong input
+		if(attackroll.length > units){
+			//Do alert before
+			alert("Not enough units to attack");
+			return false;
+		}
+		//is adjacent
+		if(!gameControl.isAdjacent(area1, territory1, area2, territory2)){
+			//Do alert beforil
+			alert("terriories not adjacent");
+			return false;
+		};
+
+		var a = attackroll.sort(function(a, b){return b-a});
+		var b = defroll.sort(function(a, b){return b-a});
+		if(gameControl.hasHero(area1, territory1)){
+			a[0]++;
+		}
+		if(gameControl.hasHero(area2, territory2)){
+			b[0]++;
+		}
+		for (var i = 0; i < Math.min(a.length,b.length); i++) {
+			console.log("attack : " + a[i]);
+			console.log("defend : " + b[i]);
+			//If attacker wins
+			if(a[i]>b[i]){
+				gameControl.removeUnits(area2,territory2,1);
+				if(gameControl.isDefeated(area2, territory2)){return true;}
+			}else{
+				gameControl.removeUnits(area1,territory1,1);
+			}
+		};
+		return false;
+
+	};
+	//Same as attack but autorolls dices
+	this.attackandroll = function(area1, territory1,units, area2, territory2){
+		if(gameControl.getUnits(area1, territory1)<units || gameControl.getUnits(area1, territory1)==1){
+			//no enough units
+			return;
+		}
+		var defcount = 1;
+		if(gameControl.getUnits(area1, territory1)>1){
+			defcount = 2;
+		}
+		gameControl.attack(area1, territory1,units, dice.rollMulti(units), area2, territory2, dice.rollMulti(defcount));
+	};
+	//Returns boolean if 2 territories is adjacent
+	this.isAdjacent = function(area1, territory1, area2, territory2){
+		var adjacent = gameControl.getAdjacent(area1, territory1);
+		console.log(adjacent);
+		for (var i = 0; i < adjacent.length; i++) {
+			if(adjacent[i].area == area2 && adjacent[i].territory == territory2){
+				return true;
+			}
+		};
+		return false;
+	}
+
+	//UI control
+}
+
+
 var gameData = {
 	//Number of players
 	playerSize : null,
 	//Array with player data
 	players: null,
+	//Startphases
+	startphases : ["Base", "Units", "Hero"],
+	//Current startphase, if over 2, startphase is over
+	starphase : 0,
 	//Diffrent phases of the game
 	gamePhases : ["Deployment", "Attack", "Achievment", "Movement"],
 	//Currrent gamephase
 	gamePhase : 0,
-	turn : 0
+	turn : 0,
+
+	map : null,
+	//Starting units for number of players -> 3, 4 ,5 , 6
+	startUnits : [30,25,20,15]
+
+
 
 }
 var players = [
-{color: "AA00FF", race : "zerg", name: ""},
-{color: "FF6D00", race : "protoss", name: ""},
-{color: "2962FF", race : "terran", name: ""},
-{color: "D50000", race : "terran", name: ""},
-{color: "FFEB3B", race : "protoss", name: ""},
-{color: "795548", race : "zerg", name: ""}
+{color: "AA00FF", race : "zerg", name: "", taken: false},
+{color: "FF6D00", race : "protoss", name: "", taken: false},
+{color: "2962FF", race : "terran", name: "", taken: false},
+{color: "D50000", race : "terran", name: "", taken: false},
+{color: "FFEB3B", race : "protoss", name: "", taken: false},
+{color: "795548", race : "zerg", name: "", taken: false}
 ]
 var player = {
 	name : null,
 	faction : null,
+}
+var mapskelleton = {
+	size: null,
+	premade: false,
+	area : new Array(),
+}
+var territorySkelleton = {
+	name : null, color : null, hero : false, units : 0, adjacent : [{area : 0, territory : 0}] 
 }
 var maps = [
 	// Three players
@@ -82,12 +342,13 @@ var maps = [
 	{
 		order : [3,4,0,2],
 		size : 4,
-		planets : [
+		premade: false,
+		area : [
 		{
 			name : "Char",
 			bonus : 7,
 			territories : [
-			{ name : "Char aleph", color : "AA00FF", hero : false, units : 2 },
+			{ name : "Char aleph", color : "AA00FF", hero : false, units : 2, adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
 			{ name : "Glass flats", color : "AA00FF", hero : false, units : 2 },
 			{ name : "Burning rift", color : "AA00FF", hero : false, units : 2 },
 			{ name : "Death valley", color : "2962FF", hero : false, units : 5 },
@@ -101,7 +362,7 @@ var maps = [
 			{ name : "Ate", color : "2962FF", hero : false, units : 1 }
 			]
 		},
-				{
+		{
 			name : "Korhal",
 			bonus : 5,
 			territories : [
@@ -115,7 +376,7 @@ var maps = [
 			]
 
 		},
-			{
+		{
 			name : "Aiur",
 			bonus : 5,
 			territories : [
@@ -133,7 +394,7 @@ var maps = [
 			]
 		},
 		//3
-				{
+		{
 			name : "Zerus",
 			bonus : 2,
 			territories : [
@@ -144,7 +405,7 @@ var maps = [
 			]
 		},
 		//4
-				{
+		{
 			name : "Mar sara",
 			bonus : 3,
 			territories : [
@@ -156,7 +417,7 @@ var maps = [
 			{ name : "Pyramus", color : "FFEB3B", hero : false, units : 2 },
 			]
 		},
-					{
+		{
 			name : "Shakuras",
 			bonus : 2,
 			territories : [
@@ -173,9 +434,14 @@ var maps = [
 	
 	]
 
-var gameLoop = function(){
+var gameLoop = function(control){
 	var isRunning = true;
-	setupBoard();
+	var uicontrol = new UIControl(control);
+	uicontrol.setupBoard();
+	//If map is not premade(startup units placed), start unitplacment
+	if(control.isStartPhase){
+		// placeBase(control);
+	}
 	// while(isRunning){
 			//Set turn
 
@@ -190,83 +456,34 @@ var gameLoop = function(){
 
 };
 
-var setupBoard = function(){
-	$("body").css("float","left");
-	$("body").css('background-image', 'none');
-	$("body").css("background-color","black");
-
-	//Adds sidepanel
-	addInfoPanel();
-	//Add board
-	addBoard();
 
 
-};
+    var areaClick = function(area,id){
+    	panel.territoriumPanel(area,id);
+    }
+    var placeBase = function(control){
+    	$("#Map area").bind('click',function(){
+    		alert('unit placed');
+    		var pos = $(this).attr('title').split[" "];
+    		var area = parseInt(pos[0]);
+    		var territory = parseInt(pos[1]);
+    	});
+    }
 
-var addInfoPanel = function(){
-	$("body").append('<div id="scorepanel"></div>');
-	$("#scorepanel").append("<h1 id='titleTurn' class='score'>"+gameData.players[gameData.turn].name+"</h1>");
-	$("#scorepanel").append("<h2 id='titlePhase' class='score'>"+gameData.gamePhases[gameData.gamePhase]+"</h1>");
-	$("#scorepanel").append("<input type='button' id='nextPhase' class='score' value='Next phase'></input>");
-	$('#titleTurn').css('color',"#"+gameData.players[gameData.turn].color);
-	$('#titlePhase').css('color',"white");
-	$("#scorepanel").append(scorePanelData.toggleTitleHTML);
-	$("#toggleTitle ").append(scorePanelData.toggleTitle);
-	$("#scorepanel").append(scorePanelData.toggleColorHTML);
+    var placeStartUnits = function(control){
 
-	$(".toggle-btn:not('.noscript') input[type=radio]").addClass("visuallyhidden");
-	$(".toggle-btn:not('.noscript') input[type=radio]").change(function() {
-		if( $(this).attr("name") ) {
-			$(this).parent().addClass("success").siblings().removeClass("success")
-		} else {
-			$(this).parent().toggleClass("success");
-		}
-	});
-	$(".toggle-btn:not('.noscript') input[type=radio]").bind('click', function(){
-		console.log($(this).attr('id'));
-		if($(this).attr('id') == 'toggleOn'){
-			highlighting.alwaysOn =true;
-		}else if($(this).attr('id') == 'toggleOff'){
-				highlighting.alwaysOn =false;
-		}
-		for (var i = 0; i < 42; i++) {
-			var color =  getTerrColor("#terr"+i);
-			highlighting.setTerritoriumColor("#terr"+i,color);
-		};
-		$('#playboard').maphilight();
-	});
 
-	$('#nextPhase').bind('click',function(){
-		gameData.gamePhase++;
-		if(gameData.gamePhase>4){
-			gameData.turn = (gameData.turn+1)%4;
-			gameData.gamePhase=0;
-		} 
-		$('#titleTurn').text(gameData.players[gameData.turn].name);
-		$('#titleTurn').css('color',"#"+ gameData.players[gameData.turn].color);
-		$('#titlePhase').text(gameData.gamePhases[gameData.gamePhase]);
-		$('#titlePhase').css('color',"white");
-	});
+    	$("#Map area").bind('click',function(){
+    		alert('unit placed');
+    		var pos = $(this).attr('title').split[" "];
+    		var area = parseInt(pos[0]);
+    		var territory = parseInt(pos[1]);
+    		// if(map.area[area].territories[territory].units)  
+    	});
+    }
+    var changeGameState = function(){
 
-};
-
-var addBoard = function(){
-	$("body").append('<div id="boardContaineer"/>');
-	$("#boardContaineer").append(boardImg);
-	$("#boardContaineer").append(map);
-	for (var i = 0; i < 42; i++) {
-		$("#Map").append($(area1[i]).attr('id','terr' + i));
-		var color =  getTerrColor("#terr"+i);
-		highlighting.setTerritoriumColor("#terr"+i,color);
-	};
-	$('#playboard').maphilight();
-
-}
-
-var areaClick = function(area,id){
-	panel.territoriumPanel(area,id);
-}
-
+    }
 var highlighting = {
 
 	alwaysOn : true,
@@ -285,19 +502,24 @@ var getTerrColor= function(id){
 
 	var pos = $(id).attr('title');
 	var pos2 = pos.split(" ");
-	return maps[gameData.playerSize-3].planets[parseInt(pos2[0])].territories[parseInt(pos2[1])].color;
+	return maps[gameData.playerSize-3].area[parseInt(pos2[0])].territories[parseInt(pos2[1])].color;
 }
+ var game;
+ $(document).ready(function(){
 
-$(document).ready(function(){
-
-	panel.startpanel();
+	// panel.startpanel();
 	             // jQuery('#ImageMap1').maphilight();
 	             // gameLoop();
-});
+	             game = new risk();
+	             game.setMap(maps[1]);
+	             game.start();
 
-function gameSetup(){
+	         });
 
-};
+ function gameSetup(){
+
+ };
+
 var paneldata ={
 	numberOfPlayers : {
 		title : "Choose number of players",
@@ -309,7 +531,7 @@ var paneldata ={
 
 var panel = {
 
-	startpanel : function(){
+	startpanel : function(control){
 		console.log("startpanel");
 
 		$("body").append("<div class='panel' id='players'></div>");
@@ -327,17 +549,18 @@ var panel = {
 		});
 		//action for selection of player size
 		$(".btnPlayers").bind('click', function(){
+
 				//record number of players 
-				gameData.playerSize = parseInt(this.value);
-				gameData.players = new Array(gameData.playerSize);
+				control.setPlayerSize(parseInt(this.value));
+				control.setPlayers(players.slice(0,parseInt(this.value)));
 				panel.removePanel("#players",function(){});
 				$("#players").remove();
-				panel.playerPanel();
+				panel.playerPanel(control);
 
 			});
 	},
 
-	playerPanel : function(){
+	playerPanel : function(control){
 		console.log("playerpanel");
 
 		$("body").append("<div class='panel' id='playerIds'></div>");
@@ -345,40 +568,52 @@ var panel = {
 		$("#playerIds h1").text(paneldata.playerID.title);
 
 		panel.addPanel("#playerIds", function(){
-
-			for (var i = 1; i <= gameData.playerSize; i++) {
+		console.log(control.getGameData());
+			for (var i = 1; i <= control.getPlayerSize(); i++) {
 				var value = "Player" + i;
 
-				var color = players[maps[gameData.playerSize-3].order[i-1]].color;
+				var color = players[i-1].color;
 
 				$("#playerIds").append('<input id="player'+color+'" type="text" style="width:100px">');
 				$("#player"+color).val(value);
-				var race = players[maps[gameData.playerSize-3].order[i-1]].race;
-				$("#playerIds").append('<img class="raceicon"src="img/'+race+'.jpg"/>');
+				$("#playerIds").append('<img id="terranimg'+i+'" class="raceicon playerrow'+i+'"src="img/terran.jpg"/>');
+				$("#playerIds").append('<img id="protossimg'+i+'" class="raceicon playerrow'+i+'"src="img/protoss.jpg"/>');
+				$("#playerIds").append('<img id="zergimg'+i+'" class="raceicon playerrow'+i+'"src="img/zerg.jpg"/>');
+				//Click on  img
+				$(".playerrow"+i).bind('click',function(){
+
+					var id = $(this).attr('id');
+					var rowClass = $(this).attr('class').split(' ')[1];
+					var num = parseInt(id.split('img')[1])-1;
+					$("."+rowClass).removeClass("chosen");
+					$(this).addClass("chosen");
+					control.setPlayerRace(num,id.split('img')[0]);
+
+				});
 
 				$("#playerIds").append('<Br/>');
 			};
 
 			$("#playerIds").append('<Br/>');
-
 			//Button and action to finish 
 			$("#playerIds").append('<input id="btnPlayerDone" type="button" value="Done"  style="width:100px">');
+
 			$("#btnPlayerDone").bind('click',function(){
 				//Check that all players has chosen a race;
-				for (var i = 1; i <= gameData.playerSize; i++) {
-					var color = players[maps[gameData.playerSize-3].order[i-1]].color;
+				for (var i = 1; i <= control.getPlayerSize(); i++) {
+					var color = control.getPlayerColor(i-1);
 					var name = $("#player"+color).val();
-					if( name == ""){
-						alert("Please enter names for all players");
+					var race = control.getPlayerRace(i-1);
+					if( name == "" || race ==""){
+						alert("Please enter names and race for all players");
 						return;
 					}
-					players[maps[gameData.playerSize-3].order[i-1]].name = name;
-					gameData.players[i-1] =players[maps[gameData.playerSize-3].order[i-1]];
+					control.setPlayerName(i-1,name);
 				};
 		// Launch game;
 		panel.removePanel("#playerIds",function(){
 			$("#playerIds").remove();
-			gameLoop();
+			gameLoop(control);
 		});
 	});
 
@@ -416,14 +651,14 @@ territoriumPanel : function(territorium,id){
 
 	panel.addPanel("#territorium",function(){
 
-		var color = maps[gameData.playerSize-3].planets[planet].territories[area].color;
+		var color = maps[gameData.playerSize-3].area[planet].territories[area].color;
 		$("#territorium").css('background-image', 'none');
 		$("#territorium").css("background-color", color);
 		$('map area').off('click');
 		$("#territorium h1").text(territorium.toUpperCase());
 		$("#territorium").append('<div id="unitscontainer" class="panelcontainer"/>');
 		$("#unitscontainer").append('<input id="btnUnitsMinus" class="btnPanel" type="button" value="-" />');
-		$("#unitscontainer").append("<h1 id='units'> Units : "+maps[gameData.playerSize-3].planets[planet].territories[area].units+"</h1>");
+		$("#unitscontainer").append("<h1 id='units'> Units : "+maps[gameData.playerSize-3].area[planet].territories[area].units+"</h1>");
 		$("#unitscontainer").append('<input id="btnUnitsPlus" class="btnPanel" type="button" value="+"  />');
 		$("#territorium").append('<div id="colorcontainer" class="panelcontainer" />');
 
@@ -442,12 +677,12 @@ territoriumPanel : function(territorium,id){
 			});
 		});
 		$("#btnUnitsMinus").bind('click',function(){
-			maps[gameData.playerSize-3].planets[planet].territories[area].units--;
-			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
+			maps[gameData.playerSize-3].area[planet].territories[area].units--;
+			$("#units").text("Units : " + maps[gameData.playerSize-3].area[planet].territories[area].units);
 		});
 		$("#btnUnitsPlus").bind('click',function(){
-			maps[gameData.playerSize-3].planets[planet].territories[area].units++;
-			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
+			maps[gameData.playerSize-3].area[planet].territories[area].units++;
+			$("#units").text("Units : " + maps[gameData.playerSize-3].area[planet].territories[area].units);
 		});
 		$("#btnColorNext").bind('click',function(){
 			
@@ -458,7 +693,7 @@ territoriumPanel : function(territorium,id){
 					break;
 				}
 			};
-			maps[gameData.playerSize-3].planets[planet].territories[area].color = color;
+			maps[gameData.playerSize-3].area[planet].territories[area].color = color;
 			$("#territorium").css("background-color", color);
 			$("#color").text("Color : " + color);
 		});
@@ -472,4 +707,115 @@ var scorePanelData ={
 	toggleColorHTML : '<div class="toggle-btn-grp joint-toggle"><label onclick="" id="on" class="toggle-btn success"><input id="toggleOn" type="radio" name="group3"/>On</label><label onclick="" id="off" class="toggle-btn"><input id="toggleOff" type="radio" name="group3"/>Off</label></div>'
 
 
+}
+function risk(){
+	var data = gameData;
+	var gamemap = maps[1];
+	var control; 
+	this.setGameData = function(gamedata){data = gamedata;};
+	this.setMap = function(map){gamemap=map};
+	this.start = function(){
+		var control = new gameControl(data,gamemap);
+		panel.startpanel(control);
+	};
+
+	this.getData = function(){
+		return data;
+	}
+	this.getControl = function(){
+		return control;
+	}
+
+}
+
+function UIControl(c){
+	var self =this;
+	this.control = c;
+	this.setupBoard = function(){
+	$("body").css("float","left");
+	$("body").css('background-image', 'none');
+	$("body").css("background-color","black");
+
+	//Adds sidepanel
+	addInfoPanel();
+	//Add board
+	addBoard();
+
+
+};
+
+var addInfoPanel = function(){
+	$("body").append('<div id="scorepanel"></div>');
+	$("#scorepanel").append("<h1 id='titleTurn' class='score'></h1>");
+	$("#scorepanel").append("<h2 id='titlePhase' class='score'></h1>");
+	$("#scorepanel").append("<input type='button' id='nextPhase' class='score' value='Next phase'></input>");
+
+	//
+	// $('#titleTurn').css('color',"#"+gameData.players[gameData.turn].color);
+	// $('#titlePhase').css('color',"white");
+	$("#scorepanel").append(scorePanelData.toggleTitleHTML);
+	$("#toggleTitle ").append(scorePanelData.toggleTitle);
+	$("#scorepanel").append(scorePanelData.toggleColorHTML);
+
+	$(".toggle-btn:not('.noscript') input[type=radio]").addClass("visuallyhidden");
+	$(".toggle-btn:not('.noscript') input[type=radio]").change(function() {
+		if( $(this).attr("name") ) {
+			$(this).parent().addClass("success").siblings().removeClass("success")
+		} else {
+			$(this).parent().toggleClass("success");
+		}
+	});
+	$(".toggle-btn:not('.noscript') input[type=radio]").bind('click', function(){
+		console.log($(this).attr('id'));
+		if($(this).attr('id') == 'toggleOn'){
+			highlighting.alwaysOn =true;
+		}else if($(this).attr('id') == 'toggleOff'){
+			highlighting.alwaysOn =false;
+		}
+		for (var i = 0; i < 42; i++) {
+			var color =  getTerrColor("#terr"+i);
+			highlighting.setTerritoriumColor("#terr"+i,color);
+		};
+		$('#playboard').maphilight();
+	});
+
+	$('#nextPhase').bind('click',function(){
+		console.log(data);
+		gameData.gamePhase++;
+		if(gameData.gamePhase>4){
+			gameData.turn = (gameData.turn+1)%4;
+			gameData.gamePhase=0;
+		} 
+		$('#titleTurn').text(gameData.players[gameData.turn].name);
+		$('#titleTurn').css('color',"#"+ gameData.players[gameData.turn].color);
+		$('#titlePhase').text(gameData.gamePhases[gameData.gamePhase]);
+		$('#titlePhase').css('color',"white");
+	});
+
+};
+
+var addBoard = function(){
+	$("body").append('<div id="boardContainer"/>');
+	$("#boardContainer").append(boardImg);
+
+	$("#boardContainer").append(map);
+	for (var i = 0; i < 42; i++) {
+		$("#Map").append($(area1[i]).attr('id','terr' + i));
+
+		var pos = $("#terr"+i).attr('title');
+		var pos2 = pos.split(" ");
+		console.log(pos2);
+		var color =  self.control.getColor(parseInt(pos2[0]),parseInt(pos2[1]));
+		highlighting.setTerritoriumColor("#terr"+i,color);
+	};
+	$('#playboard').maphilight();
+
+ /* var $span=$('<span class="map_title">'+"30 Units"+'</span>');        
+        $span.css({top: 200+'px', left: 200+'px', color : 'purple', "font-size" : '40px', position:'absolute'});
+        $span.appendTo('#boardContainer');*/
+    }
+
+	this.setTurn = function(){};
+	this.setPhase = function(){};
+	this.setInfoPanel=function(){};
 }

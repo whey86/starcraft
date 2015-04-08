@@ -9,7 +9,7 @@ var paneldata ={
 
 var panel = {
 
-	startpanel : function(){
+	startpanel : function(control){
 		console.log("startpanel");
 
 		$("body").append("<div class='panel' id='players'></div>");
@@ -27,17 +27,18 @@ var panel = {
 		});
 		//action for selection of player size
 		$(".btnPlayers").bind('click', function(){
+
 				//record number of players 
-				gameData.playerSize = parseInt(this.value);
-				gameData.players = new Array(gameData.playerSize);
+				control.setPlayerSize(parseInt(this.value));
+				control.setPlayers(players.slice(0,parseInt(this.value)));
 				panel.removePanel("#players",function(){});
 				$("#players").remove();
-				panel.playerPanel();
+				panel.playerPanel(control);
 
 			});
 	},
 
-	playerPanel : function(){
+	playerPanel : function(control){
 		console.log("playerpanel");
 
 		$("body").append("<div class='panel' id='playerIds'></div>");
@@ -45,40 +46,52 @@ var panel = {
 		$("#playerIds h1").text(paneldata.playerID.title);
 
 		panel.addPanel("#playerIds", function(){
-
-			for (var i = 1; i <= gameData.playerSize; i++) {
+		console.log(control.getGameData());
+			for (var i = 1; i <= control.getPlayerSize(); i++) {
 				var value = "Player" + i;
 
-				var color = players[maps[gameData.playerSize-3].order[i-1]].color;
+				var color = players[i-1].color;
 
 				$("#playerIds").append('<input id="player'+color+'" type="text" style="width:100px">');
 				$("#player"+color).val(value);
-				var race = players[maps[gameData.playerSize-3].order[i-1]].race;
-				$("#playerIds").append('<img class="raceicon"src="img/'+race+'.jpg"/>');
+				$("#playerIds").append('<img id="terranimg'+i+'" class="raceicon playerrow'+i+'"src="img/terran.jpg"/>');
+				$("#playerIds").append('<img id="protossimg'+i+'" class="raceicon playerrow'+i+'"src="img/protoss.jpg"/>');
+				$("#playerIds").append('<img id="zergimg'+i+'" class="raceicon playerrow'+i+'"src="img/zerg.jpg"/>');
+				//Click on  img
+				$(".playerrow"+i).bind('click',function(){
+
+					var id = $(this).attr('id');
+					var rowClass = $(this).attr('class').split(' ')[1];
+					var num = parseInt(id.split('img')[1])-1;
+					$("."+rowClass).removeClass("chosen");
+					$(this).addClass("chosen");
+					control.setPlayerRace(num,id.split('img')[0]);
+
+				});
 
 				$("#playerIds").append('<Br/>');
 			};
 
 			$("#playerIds").append('<Br/>');
-
 			//Button and action to finish 
 			$("#playerIds").append('<input id="btnPlayerDone" type="button" value="Done"  style="width:100px">');
+
 			$("#btnPlayerDone").bind('click',function(){
 				//Check that all players has chosen a race;
-				for (var i = 1; i <= gameData.playerSize; i++) {
-					var color = players[maps[gameData.playerSize-3].order[i-1]].color;
+				for (var i = 1; i <= control.getPlayerSize(); i++) {
+					var color = control.getPlayerColor(i-1);
 					var name = $("#player"+color).val();
-					if( name == ""){
-						alert("Please enter names for all players");
+					var race = control.getPlayerRace(i-1);
+					if( name == "" || race ==""){
+						alert("Please enter names and race for all players");
 						return;
 					}
-					players[maps[gameData.playerSize-3].order[i-1]].name = name;
-					gameData.players[i-1] =players[maps[gameData.playerSize-3].order[i-1]];
+					control.setPlayerName(i-1,name);
 				};
 		// Launch game;
 		panel.removePanel("#playerIds",function(){
 			$("#playerIds").remove();
-			gameLoop();
+			gameLoop(control);
 		});
 	});
 
@@ -116,14 +129,14 @@ territoriumPanel : function(territorium,id){
 
 	panel.addPanel("#territorium",function(){
 
-		var color = maps[gameData.playerSize-3].planets[planet].territories[area].color;
+		var color = maps[gameData.playerSize-3].area[planet].territories[area].color;
 		$("#territorium").css('background-image', 'none');
 		$("#territorium").css("background-color", color);
 		$('map area').off('click');
 		$("#territorium h1").text(territorium.toUpperCase());
 		$("#territorium").append('<div id="unitscontainer" class="panelcontainer"/>');
 		$("#unitscontainer").append('<input id="btnUnitsMinus" class="btnPanel" type="button" value="-" />');
-		$("#unitscontainer").append("<h1 id='units'> Units : "+maps[gameData.playerSize-3].planets[planet].territories[area].units+"</h1>");
+		$("#unitscontainer").append("<h1 id='units'> Units : "+maps[gameData.playerSize-3].area[planet].territories[area].units+"</h1>");
 		$("#unitscontainer").append('<input id="btnUnitsPlus" class="btnPanel" type="button" value="+"  />');
 		$("#territorium").append('<div id="colorcontainer" class="panelcontainer" />');
 
@@ -142,12 +155,12 @@ territoriumPanel : function(territorium,id){
 			});
 		});
 		$("#btnUnitsMinus").bind('click',function(){
-			maps[gameData.playerSize-3].planets[planet].territories[area].units--;
-			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
+			maps[gameData.playerSize-3].area[planet].territories[area].units--;
+			$("#units").text("Units : " + maps[gameData.playerSize-3].area[planet].territories[area].units);
 		});
 		$("#btnUnitsPlus").bind('click',function(){
-			maps[gameData.playerSize-3].planets[planet].territories[area].units++;
-			$("#units").text("Units : " + maps[gameData.playerSize-3].planets[planet].territories[area].units);
+			maps[gameData.playerSize-3].area[planet].territories[area].units++;
+			$("#units").text("Units : " + maps[gameData.playerSize-3].area[planet].territories[area].units);
 		});
 		$("#btnColorNext").bind('click',function(){
 			
@@ -158,7 +171,7 @@ territoriumPanel : function(territorium,id){
 					break;
 				}
 			};
-			maps[gameData.playerSize-3].planets[planet].territories[area].color = color;
+			maps[gameData.playerSize-3].area[planet].territories[area].color = color;
 			$("#territorium").css("background-color", color);
 			$("#color").text("Color : " + color);
 		});

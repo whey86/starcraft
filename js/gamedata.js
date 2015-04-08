@@ -1,26 +1,46 @@
+
+
 var gameData = {
 	//Number of players
 	playerSize : null,
 	//Array with player data
 	players: null,
+	//Startphases
+	startphases : ["Base", "Units", "Hero"],
+	//Current startphase, if over 2, startphase is over
+	starphase : 0,
 	//Diffrent phases of the game
 	gamePhases : ["Deployment", "Attack", "Achievment", "Movement"],
 	//Currrent gamephase
 	gamePhase : 0,
-	turn : 0
+	turn : 0,
+
+	map : null,
+	//Starting units for number of players -> 3, 4 ,5 , 6
+	startUnits : [30,25,20,15]
+
+
 
 }
 var players = [
-{color: "AA00FF", race : "zerg", name: ""},
-{color: "FF6D00", race : "protoss", name: ""},
-{color: "2962FF", race : "terran", name: ""},
-{color: "D50000", race : "terran", name: ""},
-{color: "FFEB3B", race : "protoss", name: ""},
-{color: "795548", race : "zerg", name: ""}
+{color: "AA00FF", race : "zerg", name: "", taken: false},
+{color: "FF6D00", race : "protoss", name: "", taken: false},
+{color: "2962FF", race : "terran", name: "", taken: false},
+{color: "D50000", race : "terran", name: "", taken: false},
+{color: "FFEB3B", race : "protoss", name: "", taken: false},
+{color: "795548", race : "zerg", name: "", taken: false}
 ]
 var player = {
 	name : null,
 	faction : null,
+}
+var mapskelleton = {
+	size: null,
+	premade: false,
+	area : new Array(),
+}
+var territorySkelleton = {
+	name : null, color : null, hero : false, units : 0, adjacent : [{area : 0, territory : 0}] 
 }
 var maps = [
 	// Three players
@@ -29,12 +49,13 @@ var maps = [
 	{
 		order : [3,4,0,2],
 		size : 4,
-		planets : [
+		premade: false,
+		area : [
 		{
 			name : "Char",
 			bonus : 7,
 			territories : [
-			{ name : "Char aleph", color : "AA00FF", hero : false, units : 2 },
+			{ name : "Char aleph", color : "AA00FF", hero : false, units : 2, adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
 			{ name : "Glass flats", color : "AA00FF", hero : false, units : 2 },
 			{ name : "Burning rift", color : "AA00FF", hero : false, units : 2 },
 			{ name : "Death valley", color : "2962FF", hero : false, units : 5 },
@@ -48,7 +69,7 @@ var maps = [
 			{ name : "Ate", color : "2962FF", hero : false, units : 1 }
 			]
 		},
-				{
+		{
 			name : "Korhal",
 			bonus : 5,
 			territories : [
@@ -62,7 +83,7 @@ var maps = [
 			]
 
 		},
-			{
+		{
 			name : "Aiur",
 			bonus : 5,
 			territories : [
@@ -80,7 +101,7 @@ var maps = [
 			]
 		},
 		//3
-				{
+		{
 			name : "Zerus",
 			bonus : 2,
 			territories : [
@@ -91,7 +112,7 @@ var maps = [
 			]
 		},
 		//4
-				{
+		{
 			name : "Mar sara",
 			bonus : 3,
 			territories : [
@@ -103,7 +124,7 @@ var maps = [
 			{ name : "Pyramus", color : "FFEB3B", hero : false, units : 2 },
 			]
 		},
-					{
+		{
 			name : "Shakuras",
 			bonus : 2,
 			territories : [
