@@ -1,30 +1,30 @@
 function UIControl(c){
 	var self =this;
 	this.control = c;
-		$("body").css("float","left");
+
+		$("body").empty();
 		$("body").css('background-image', 'none');
-		$("body").css("background-color","black");
+		$("body").css("background-color","#000011");
 
 
 this.setTurn = function(player){
+	console.log(player);
 	$('#titleTurn').text(player.name);
 	$('#titleTurn').css('color',"#"+ player.color);
 };
-this.setPhase = function(player){
-	$('#titlePhase').text(player.name);
-	$('#titlePhase').css('color',"#"+ player.color);
+this.setPhase = function(phase){
+	$('#titlePhase').text(phase);
 }
 
 this.addInfoPanel = function(){
 	$("body").append('<div id="scorepanel"></div>');
-	$("#scorepanel").append("<h1 id='titleTurn' class='score'></h1>");
-	$("#scorepanel").append("<h2 id='titlePhase' class='score'></h1>");
-	$("#scorepanel").append("<input type='button' id='nextPhase' class='score' value='Next phase'></input>");
+		$("#scorepanel").append('<div id="score1"></div>');
+	$("#score1").append("<h1 id='titleTurn' class='score'></h1>");
+	$("#scorepanel").append('<div id="score2"></div>');
+	$("#score2").append("<h1 id='titlePhase' class='score'></h1>");
 
-	//
-	// $('#titleTurn').css('color',"#"+gameData.players[gameData.turn].color);
-	// $('#titlePhase').css('color',"white");
-	$("#scorepanel").append(scorePanelData.toggleTitleHTML);
+
+	/*$("#scorepanel").append(scorePanelData.toggleTitleHTML);
 	$("#toggleTitle ").append(scorePanelData.toggleTitle);
 	$("#scorepanel").append(scorePanelData.toggleColorHTML);
 
@@ -44,14 +44,16 @@ this.addInfoPanel = function(){
 			highlighting.alwaysOn =false;
 		}
 		for (var i = 0; i < 42; i++) {
-			var color =  getTerrColor("#terr"+i);
+				var pos = $("#terr"+i).attr('title');
+			var pos2 = pos.split(" ");
+			var color =  self.control.getColor(parseInt(pos2[0]),parseInt(pos2[1]));
 			highlighting.setTerritoriumColor("#terr"+i,color);
 		};
 		$('#playboard').maphilight();
 	});
 
 	$('#nextPhase').bind('click',function(){
-		console.log(self.control.getGameData());
+		console.log(self.control.getGameData());*/
 	/*	gameData.gamePhase++;
 		if(gameData.gamePhase>4){
 			gameData.turn = (gameData.turn+1)%4;
@@ -61,15 +63,15 @@ this.addInfoPanel = function(){
 		$('#titleTurn').css('color',"#"+ gameData.players[gameData.turn].color);
 		$('#titlePhase').text(gameData.gamePhases[gameData.gamePhase]);
 		$('#titlePhase').css('color',"white");*/
-	});
+	// });
 
 };
 
 this.addBoard = function(){
-	$("body").append('<div id="boardContainer"/>');
+	$("body").append('<div id="boardContainer"></div>');
 	$("#boardContainer").append(boardImg);
-
-	$("#boardContainer").append(map);
+		$("#boardContainer").append(map);
+	;
 	for (var i = 0; i < 42; i++) {
 		$("#Map").append($(area1[i]).attr('id','terr' + i));
 
@@ -78,8 +80,9 @@ this.addBoard = function(){
 		// var color =  self.control.getColor(parseInt(pos2[0]),parseInt(pos2[1]));
 		// highlighting.setTerritoriumColor("#terr"+i,color);
 	};
+	
 	$('#playboard').maphilight({strokeColor : "#AAAAAA"});
-
+	// $('img[usemap]').rwdImageMaps();
  /* var $span=$('<span class="map_title">'+"30 Units"+'</span>');        
         $span.css({top: 200+'px', left: 200+'px', color : 'purple', "font-size" : '40px', position:'absolute'});
         $span.appendTo('#boardContainer');*/
@@ -87,6 +90,13 @@ this.addBoard = function(){
 this.setupBoard = function(){
 	this.addInfoPanel();
 	this.addBoard();
+	this.addInputPanel();
 
+}
+this.addInputPanel = function(){
+$("body").append('<div id="inputpanel"></div>');
+	
+	$("#inputpanel").append('<div id="input1"></div>');
+	$("#input1").append("<button id='btnDone' class='score' >Done</button>");
 }
 }

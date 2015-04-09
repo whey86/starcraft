@@ -31,7 +31,14 @@ function gameControl (d,m){
 	};
 
 	this.getGamePhase =  function(){
-		return data.gamePhases[gameControl.gameData.phase];
+		return data.gamePhases[data.phase];
+	};
+
+	this.getCurrentPhase =  function(){
+		if(data.startPhase<3){
+			return data.startPhases[data.startPhase];
+		}
+		return data.gamePhases[data.gamePhase];
 	};
 	this.getGameData =  function(){
 		return data;
@@ -246,36 +253,38 @@ function gameControl (d,m){
     				console.log("click 1");
     				console.log(data.baseCount);
     				console.log(data.playerSize);
-    				if(data.baseCount < data.playerSize){
-    				//Place base if territory dont have a base and finish turn
     				if(con.addBase(area,territory)){
     					console.log("Base placed");
     					data.baseCount++;
     					con.turnComplete();
     				}
-    				return;
-    			}else{
+    				if(data.baseCount >= data.playerSize){
+    				//Place base if territory dont have a base and finish turn
     				con.nextStartPhase();
     			}	},
     			function (con,area,territory) {
     				console.log("click 2");
+    				//Player has units left 
     				if(data.unitCount[data.turn] > 0 ){
-    					//cant place on busy area
+    					//can place on busy area
     					if(data.unitsOut>=map.mapSize){
-    						if(this.getPlayerColor(data.turn) == getColor(area,territory)){
-    							con.addUnits(area,territory,1);
-    							data.unitsOut++;
+
+    						if(con.addReinforcement){
     							data.unitCount[data.turn]-1;
+    							data.unitsOut++;
     							console.log("unit placed");
     							con.turnComplete();
     							return;
     						}
+    						return;
+    			
     					}
     					//all areas are taken, can place on busy area
     					else{
-    						if(con.addReinforcement){
-    							data.unitCount[data.turn]-1;
+    						if(con.isFree(area,territory)){
+    							con.addUnits(area,territory,1);
     							data.unitsOut++;
+    							data.unitCount[data.turn]-1;
     							console.log("unit placed");
     							con.turnComplete();
     							return;
@@ -285,8 +294,10 @@ function gameControl (d,m){
     				}
     				else{
     					con.turnComplete();
+    					return
     				}
     				con.nextStartPhase();
+
     			}
     			,
     			function (area,territory) {
@@ -311,9 +322,17 @@ function gameControl (d,m){
     				var area = parseInt(pos[0]);
     				var territory = parseInt(pos[1]);
     				if(this.isStartPhase){
-    					console.log(data.startPhase);
+    					
     					startPhaseFunctions[data.startPhase](self,area,territory);
+    					self.updateScorePanel();
+    					console.log("data");
+    					console.log(data);
     				}
     			}
+    			this.updateScorePanel = function(){
+    				ui.setTurn(self.getCurrentPlayer());
+    				ui.setPhase(self.getCurrentPhase());
+    			}
+    			
     		}
 

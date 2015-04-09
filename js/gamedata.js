@@ -1,12 +1,10 @@
-
-
 var gameData = {
 	//Number of players
 	playerSize : null,
 	//Array with player data
 	players: null,
 	//Startphases
-	startphases : ["Base", "Units", "Hero"],
+	startPhases : ["Place your base", "Add reinforcement", "Add hero on friendly territory"],
 	//Current startphase, if over 2, startphase is over
 	startPhase : 0,
 	//Diffrent phases of the game

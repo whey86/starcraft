@@ -4,7 +4,7 @@ var gameLoop = function(control){
 	control.setUIControl(uicontrol);
 	uicontrol.setupBoard();
 	bindTerritoryClick(control);
-	uicontrol.setTurn(control.getCurrentPlayer);
+	control.updateScorePanel();
 	// bindTerritoryClick(control);
 
 };
