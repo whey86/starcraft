@@ -95,10 +95,12 @@ function gameControl (d,m){
 	//int of area, int territory, int number of units added
 	this.addUnits = function(area, territory, units){
 		map.area[area].territories[territory].units += units;
+		self.updateTerritoryUI(area, territory);
 	};
 	//int of area, int territory, int number of units removed
 	this.removeUnits = function(area, territory, units){
 		map.area[area].territories[territory].units -= units;
+		ui.drawTerritoryStats(area, territory, map.area[area].territories[territory].units);
 	};
 	//int of area, int territory, colorcode of owner
 	this.changeControl = function(area, territory, color){
@@ -143,6 +145,9 @@ function gameControl (d,m){
 		var color = map.area[area].territories[territory].color;
 		if( color == null || color == ""){return true;} else{return false;} 
 	}
+	this.getMiddle = function(area, territory){
+		return map.area[area].territories[territory].middle;
+	}
 
 	/*************** STARTPHASE ************************/
 
@@ -170,6 +175,7 @@ function gameControl (d,m){
 			console.log("is free");
 			map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].units++;
+			self.this.updateTerritoryUI(area, territory);
 			return true;
 		}else{
 			return false;
@@ -213,9 +219,12 @@ function gameControl (d,m){
 			//If attacker wins
 			if(a[i]>b[i]){
 				gameControl.removeUnits(area2,territory2,1);
+				self.updateTerritoryUI(area2, territory2);
 				if(gameControl.isDefeated(area2, territory2)){return true;}
+			//Defender wins
 			}else{
 				gameControl.removeUnits(area1,territory1,1);
+				self.updateTerritoryUI(area1, territory1);
 			}
 		};
 		return false;
@@ -321,7 +330,7 @@ function gameControl (d,m){
     				var pos = $(obj[0]).attr('title').split(" ");
     				var area = parseInt(pos[0]);
     				var territory = parseInt(pos[1]);
-    				if(this.isStartPhase){
+    				if(self.isStartPhase){
     					
     					startPhaseFunctions[data.startPhase](self,area,territory);
     					self.updateScorePanel();
@@ -333,6 +342,11 @@ function gameControl (d,m){
     				ui.setTurn(self.getCurrentPlayer());
     				ui.setPhase(self.getCurrentPhase());
     			}
-    			
-    		}
+    			this.updateTerritoryUI = function(area,territory){
+    				var middle = self.getMiddle(area,territory);
+    				ui.drawTerritoryStats(middle[0],middle[1],map.area[area].territories[territory].units);
+    			}
+
+}
+    		
 

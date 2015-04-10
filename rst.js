@@ -253,10 +253,12 @@ function gameControl (d,m){
 	//int of area, int territory, int number of units added
 	this.addUnits = function(area, territory, units){
 		map.area[area].territories[territory].units += units;
+		self.updateTerritoryUI(area, territory);
 	};
 	//int of area, int territory, int number of units removed
 	this.removeUnits = function(area, territory, units){
 		map.area[area].territories[territory].units -= units;
+		ui.drawTerritoryStats(area, territory, map.area[area].territories[territory].units);
 	};
 	//int of area, int territory, colorcode of owner
 	this.changeControl = function(area, territory, color){
@@ -301,6 +303,9 @@ function gameControl (d,m){
 		var color = map.area[area].territories[territory].color;
 		if( color == null || color == ""){return true;} else{return false;} 
 	}
+	this.getMiddle = function(area, territory){
+		return map.area[area].territories[territory].middle;
+	}
 
 	/*************** STARTPHASE ************************/
 
@@ -328,6 +333,7 @@ function gameControl (d,m){
 			console.log("is free");
 			map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].units++;
+			self.this.updateTerritoryUI(area, territory);
 			return true;
 		}else{
 			return false;
@@ -371,9 +377,12 @@ function gameControl (d,m){
 			//If attacker wins
 			if(a[i]>b[i]){
 				gameControl.removeUnits(area2,territory2,1);
+				self.updateTerritoryUI(area2, territory2);
 				if(gameControl.isDefeated(area2, territory2)){return true;}
+			//Defender wins
 			}else{
 				gameControl.removeUnits(area1,territory1,1);
+				self.updateTerritoryUI(area1, territory1);
 			}
 		};
 		return false;
@@ -479,7 +488,7 @@ function gameControl (d,m){
     				var pos = $(obj[0]).attr('title').split(" ");
     				var area = parseInt(pos[0]);
     				var territory = parseInt(pos[1]);
-    				if(this.isStartPhase){
+    				if(self.isStartPhase){
     					
     					startPhaseFunctions[data.startPhase](self,area,territory);
     					self.updateScorePanel();
@@ -491,8 +500,13 @@ function gameControl (d,m){
     				ui.setTurn(self.getCurrentPlayer());
     				ui.setPhase(self.getCurrentPhase());
     			}
-    			
-    		}
+    			this.updateTerritoryUI = function(area,territory){
+    				var middle = self.getMiddle(area,territory);
+    				ui.drawTerritoryStats(middle[0],middle[1],map.area[area].territories[territory].units);
+    			}
+
+}
+    		
 
 
 var gameData = {
@@ -550,31 +564,31 @@ var freemap = {
 			name : "Char",
 			bonus : 7,
 			territories : [
-			{ name : "Char aleph", color : "", hero : false, units : 0, adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Glass flats", color : "", hero : false, units : 0 },
-			{ name : "Burning rift", color : "", hero : false, units : 0 },
-			{ name : "Death valley", color : "", hero : false, units : 0 },
-			{ name : "Bone trench", color : "", hero : false, units : 0 },
-			{ name : "Dauntless plateau", color : "", hero : false, units : 0 },
-			{ name : "Hells gates", color : "", hero : false, units : 0 },
-			{ name : "Nydus network", color : "", hero : false, units : 0 },
-			{ name : "Primary hive cluster", color : "", hero : false, units : 0 },
-			{ name : "Acid marsh", color : "", hero : false, units : 0 },
-			{ name : "Eris", color : "", hero : false, units : 0 },
-			{ name : "Ate", color : "", hero : false, units : 0 }
+			{ name : "Char aleph", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Glass flats", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Burning rift", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Death valley", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Bone trench", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Dauntless plateau", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Hells gates", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Nydus network", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Primary hive cluster", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Acid marsh", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Eris", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Ate", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] }
 			]
 		},
 		{
 			name : "Korhal",
 			bonus : 5,
 			territories : [
-			{ name : "Wolfrec province", color : "", hero : false, units : 0 },
-			{ name : "Keresh province", color : "", hero : false, units : 0 },
-			{ name : "Augustgrad", color : "", hero : false, units : 0 },
-			{ name : "Radiated wastes", color : "", hero : false, units : 0 },
-			{ name : "Ruins of styrling", color : "", hero : false, units : 0 },
-			{ name : "Ursa", color : "", hero : false, units : 0},
-			{ name : "Canis", color : "", hero : false, units : 0 },
+			{ name : "Wolfrec province", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Keresh province", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Augustgrad", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Radiated wastes", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Ruins of styrling", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Ursa", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Canis", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
 			]
 
 		},
@@ -582,16 +596,16 @@ var freemap = {
 			name : "Aiur",
 			bonus : 5,
 			territories : [
-			{ name : "Saalok", color : "", hero : false, units : 0 },
-			{ name : "Temple of the preservers", color : "", hero : false, units :0 },
-			{ name : "The great forum", color : "", hero : false, units : 0 },
-			{ name : "Antioch province", color : "", hero : false, units : 0},
-			{ name : "Scion province", color : "", hero : false, units : 0 },
-			{ name : "Remains of the overmind", color : "", hero : false, units : 0 },
-			{ name : "Feral hives", color : "", hero : false, units : 0 },
+			{ name : "Saalok", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Temple of the preservers", color : "", hero : false, units :0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "The great forum", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Antioch province", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Scion province", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Remains of the overmind", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Feral hives", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
 
-			{ name : "Velari province", color : "", hero : false, units : 0 },
-			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false},
+			{ name : "Velari province", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
 
 			]
 		},
@@ -600,10 +614,10 @@ var freemap = {
 			name : "Zerus",
 			bonus : 2,
 			territories : [
-			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false },
-			{ name : "SundeD50000 valley", color : "", hero : false, units : 0 },
-			{ name : "Fulmic highlands", color : "", hero : false, units : 0 },
-			{ name : "Volatile cleft", color : "", hero : false, units : 0 }
+			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "SundeD50000 valley", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Fulmic highlands", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Volatile cleft", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]}
 			]
 		},
 		//4
@@ -611,22 +625,22 @@ var freemap = {
 			name : "Mar sara",
 			bonus : 3,
 			territories : [
-			{ name : "Thisby", color : "", hero : false, units : 0 },
-			{ name : "Backwater station", color : "", hero : false, units : 0, base : false },
-			{ name : "Diamondback wastelands", color : "", hero : false, units : 0 },
-			{ name : "Riksville", color : "", hero : false, units : 0 },
-			{ name : "Jacobs installation", color : "", hero : false, units : 0 },
-			{ name : "Pyramus", color : "", hero : false, units : 0 },
+			{ name : "Thisby", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Backwater station", color : "", hero : false, units : 0, base : false , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Diamondback wastelands", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Riksville", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Jacobs installation", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Pyramus", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
 			]
 		},
 		{
 			name : "Shakuras",
 			bonus : 2,
 			territories : [
-			{ name : "Rajal", color : "", hero : false, units : 0, base : false },
-			{ name : "Katuul province", color : "", hero : false, units : 0 },
-			{ name : "Talematros", color : "", hero : false, units :0 },
-			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0 }
+			{ name : "Rajal", color : "", hero : false, units : 0, base : false, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
+			{ name : "Katuul province", color : "", hero : false, units : 0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Talematros", color : "", hero : false, units :0 , middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0, middle:[80,110], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] }
 			]
 		}
 		]
@@ -5581,6 +5595,9 @@ function risk(){
 
 function UIControl(c){
 	var self =this;
+	this.ratio;
+	this.ctx;
+this.myCanvas;
 	this.control = c;
 
 		$("body").empty();
@@ -5672,12 +5689,68 @@ this.setupBoard = function(){
 	this.addInfoPanel();
 	this.addBoard();
 	this.addInputPanel();
+	// this.addOverlayCanvas();
+	//Create canvas with the device resolution.
+ 	self.myCanvas = createHiDPICanvas(800, 540);
+	this.drawTerritoryStats(80,110,40);
 
 }
+
 this.addInputPanel = function(){
 $("body").append('<div id="inputpanel"></div>');
 	
 	$("#inputpanel").append('<div id="input1"></div>');
 	$("#input1").append("<button id='btnDone' class='score' >Done</button>");
 }
+this.drawTerritoryStats = function(x, y, units){
+var c = $('#overlayCanvas')[0];
+      // var context = c[0].getContext('2d');
+console.log(c);
+      var ctx = c.getContext("2d");
+ctx.font = "20px Sans-serif"
+    ctx.fillStyle = 'white';
+    ctx.fillText(units, x, y);
+      // context.lineWidth = 3;
+      // // stroke color
+      // context.strokeStyle = 'blue';
+      // context.font = '22pt calibri';
+      // context.fillStyle = 'white';
+      // context.fillText(units, 150, 100);
+
+}
+this.addOverlayCanvas = function(){
+	    $('<canvas>').attr({
+        id: 'overlayCanvas'
+    }).css({
+        width: 800  + 'px',
+        height: 540 + 'px'
+    }).appendTo("#boardContainer div");
+}
+}
+var PIXEL_RATIO = (function () {
+    var ctx =   $('<canvas>').attr({
+        id: 'overlayCanvas'
+    })[0];
+    console.log(ctx);
+        dpr = window.devicePixelRatio || 1,
+        bsr = ctx.webkitBackingStorePixelRatio ||
+              ctx.mozBackingStorePixelRatio ||
+              ctx.msBackingStorePixelRatio ||
+              ctx.oBackingStorePixelRatio ||
+              ctx.backingStorePixelRatio || 1;
+
+    return dpr / bsr;
+})();
+var createHiDPICanvas = function(w, h, ratio) {
+    if (!ratio) { ratio = PIXEL_RATIO; }
+    var can =   $('<canvas>').attr({
+        id: 'overlayCanvas'
+    }).appendTo("#boardContainer div")[0];
+    can.width = w * ratio;
+    can.height = h * ratio;
+    can.style.width = w + "px";
+    can.style.height = h + "px";
+    can.getContext("2d").setTransform(ratio, 0, 0, ratio, 0, 0);
+    $(can).attr('id', 'overlayCanvas')
+    return can;
 }
