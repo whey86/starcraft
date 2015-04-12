@@ -105,8 +105,8 @@
 	width: 800px;
 	height: 120px;
 	/*display: table-cell;*/
-	vertical-align: bottom;
-	text-align: center;
+	vertical-align: center;
+	text-align: bottom;
 	margin:0 auto; 
 	background-color: #15317E;
 	border-top-right-radius: 35px;
@@ -122,17 +122,17 @@
 	/*display: table-cell;*/
 	height: 80px;
 	padding-right: 20px;
-	vertical-align: bottom;
+	vertical-align: center;
 	display:inline-block;
 
 }
 #score1,#score2,#score3{
-
-	text-align: middle;
+	height: 100%;
+/*	text-align: middle;*/
 }
 #score1 *,#score2 *,#score3 *{
 	  background: -webkit-gradient(radial, center center, 0, center center, 460, from(#1a82f7), to(#2F2727));
-
+	text-align: top;
 	/*margin: 10px;*/
 	height: 40px;
 	 border-style: solid;
@@ -148,13 +148,14 @@
 
 .score{
 	color :white;
+	height: 100%;
 }
 .toggle-btn-grp { 
 	float : right;
 	margin:3px 0; 
 }
 .toggle-btn { 
-	text-align:centre; 
+	text-align:center; 
 	margin:5px 2px;
 	padding:0.4em 3em; 
 	color:#000; 
@@ -215,4 +216,3 @@
 	background:red;
 	border:solid 1px red !important; 
 }
-

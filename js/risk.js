@@ -5,7 +5,7 @@ function risk(){
 	this.setGameData = function(gamedata){data = gamedata;};
 	this.setMap = function(map){gamemap=map};
 	this.start = function(){
-	 control = new gameControl(data,freemap);
+	 control = new gameControl(data,gamemap);
 		panel.startpanel(control);
 	};
 

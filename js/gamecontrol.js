@@ -1,8 +1,14 @@
 function gameControl (d,m){
-	var self = this
+	var self = this;
 	var map = m;
 	var data = d;
 	var ui;
+
+	var selection = {
+		isSelected : false,
+		area : null,
+		territory : null,
+	}
 
 	/****************Set variables*********************/
 	this.setGameData = function(model){
@@ -57,11 +63,17 @@ function gameControl (d,m){
 			return false;
 		};
 	};
+	this.getCurrentMessage = function(){
+		return data.message;
+	}
+	this.setMessage = function(message){
+		data.message = message;
+	}
 
 	//Number of players (sets startunits at the same time)
 	this.setPlayerSize = function(size){
 		for (var i = 0; i < size; i++) {
-			data.unitCount[i] = data.startUnits[size-2];
+			data.unitCount[i] = data.startUnits[size-3];
 		};
 		data.playerSize = size;
 	}
@@ -95,7 +107,7 @@ function gameControl (d,m){
 	//int of area, int territory, int number of units added
 	this.addUnits = function(area, territory, units){
 		map.area[area].territories[territory].units += units;
-		self.updateTerritoryUI(area, territory);
+		// self.updateTerritoryUI(area, territory);
 	};
 	//int of area, int territory, int number of units removed
 	this.removeUnits = function(area, territory, units){
@@ -141,8 +153,8 @@ function gameControl (d,m){
 		else{return false;}
 	};
 	this.isFree = function(area, territory){
-		console.log(map);
 		var color = map.area[area].territories[territory].color;
+		console.log(color);
 		if( color == null || color == ""){return true;} else{return false;} 
 	}
 	this.getMiddle = function(area, territory){
@@ -152,6 +164,9 @@ function gameControl (d,m){
 	/*************** STARTPHASE ************************/
 
 	this.addHero= function(area, territory){
+		console.log(territory);
+		console.log(area);
+		console.log(map.area[area].territories[territory]);
 		if(map.area[area].territories[territory].color == data.players[data.turn].color){
 			map.area[area].territories[territory].hero = true;
 			return true;
@@ -162,22 +177,23 @@ function gameControl (d,m){
 	}
 	this.addBase= function(area, territory){
 		if(self.isFree(area, territory)){
-			map.area[area].territories[territory].color = data.players[data.turn].color;
+			// map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].base = true;
+			// self.updateTerritoryUI(area, territory);
 			return true;
 		}else{
 			return false;
 		}
 		
 	}
-	this.addReinforcement = function(){
+	this.addReinforcement = function(area, territory){
 		if(self.isFree(area, territory)){
-			console.log("is free");
 			map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].units++;
-			self.this.updateTerritoryUI(area, territory);
+			// self.updateTerritoryUI(area, territory);
 			return true;
 		}else{
+			alert("area is taken");
 			return false;
 		}
 	};
@@ -219,17 +235,17 @@ function gameControl (d,m){
 			//If attacker wins
 			if(a[i]>b[i]){
 				gameControl.removeUnits(area2,territory2,1);
-				self.updateTerritoryUI(area2, territory2);
+				// self.updateTerritoryUI(area2, territory2);
 				if(gameControl.isDefeated(area2, territory2)){return true;}
 			//Defender wins
-			}else{
-				gameControl.removeUnits(area1,territory1,1);
-				self.updateTerritoryUI(area1, territory1);
-			}
-		};
-		return false;
-
+		}else{
+			gameControl.removeUnits(area1,territory1,1);
+			// self.updateTerritoryUI(area1, territory1);
+		}
 	};
+	return false;
+
+};
 	//Same as attack but autorolls dices
 	this.attackandroll = function(area1, territory1,units, area2, territory2){
 		if(gameControl.getUnits(area1, territory1)<units || gameControl.getUnits(area1, territory1)==1){
@@ -258,44 +274,53 @@ function gameControl (d,m){
 				//Startphase 1´0
     			//Bases left to deploy
     			function (con, area,territory) {
-
-    				console.log("click 1");
-    				console.log(data.baseCount);
-    				console.log(data.playerSize);
     				if(con.addBase(area,territory)){
     					console.log("Base placed");
     					data.baseCount++;
+    					con.addReinforcement(area,territory);
+    					data.unitCount[data.turn]--;
+    					data.unitsOut++;
     					con.turnComplete();
+    				}else{
+    					alert("base === true");
     				}
     				if(data.baseCount >= data.playerSize){
     				//Place base if territory dont have a base and finish turn
     				con.nextStartPhase();
+    				return;
     			}	},
     			function (con,area,territory) {
     				console.log("click 2");
     				//Player has units left 
     				if(data.unitCount[data.turn] > 0 ){
-    					//can place on busy area
+    					//all areas are busy, add reinforcement on own territory instead of free
     					if(data.unitsOut>=map.mapSize){
-
-    						if(con.addReinforcement){
-    							data.unitCount[data.turn]-1;
+    						if(	map.area[area].territories[territory].color == data.players[data.turn].color){
+    							map.area[area].territories[territory].units++;
+    							// self.updateTerritoryUI(area, territory);
+    							data.unitCount[data.turn]--;
     							data.unitsOut++;
-    							console.log("unit placed");
+    							data.message = messages.deployment + data.unitCount[data.turn];
     							con.turnComplete();
+    							if(data.unitsOut>=data.max[data.playerSize-3]){
+    								data.turn = 0;
+    								con.nextStartPhase();
+    							}
     							return;
     						}
     						return;
-    			
     					}
-    					//all areas are taken, can place on busy area
+    					//add reinforcement on free area
     					else{
-    						if(con.isFree(area,territory)){
-    							con.addUnits(area,territory,1);
+    						if(con.addReinforcement(area,territory)){
+    							data.unitCount[data.turn]--;
     							data.unitsOut++;
-    							data.unitCount[data.turn]-1;
-    							console.log("unit placed");
+    								data.message = messages.deployment + data.unitCount[data.turn];
     							con.turnComplete();
+    							if(data.unitsOut>=data.max[data.playerSize-3]){
+    								data.turn = 0;
+    								con.nextStartPhase();
+    							}
     							return;
     						}
     						return;
@@ -303,50 +328,206 @@ function gameControl (d,m){
     				}
     				else{
     					con.turnComplete();
+    					if(data.unitsOut>=data.max[data.playerSize-3]){
+    						data.turn = 0;
+    						con.nextStartPhase();
+    					}
+
     					return
     				}
-    				con.nextStartPhase();
+    				
 
     			}
     			,
-    			function (area,territory) {
+    			function (con,area,territory) {
     				console.log("click 3");
-    				if(data.heroCount < data.playerSize){
-    					if(con.addHero(area, territory)){
-    						data.heroCount++;
-    						console.log("hero placed");
+    				
+    				if(self.addHero(area, territory)){
+    					data.heroCount++;
+    					con.turnComplete();
+    				}
+    				if(data.heroCount >= data.playerSize){
+
+    					data.turn = 0;
+    					con.nextStartPhase();
+
+    							//Begining of a new turn, player gets reinforcement
+
+    								self.setupTurn();
+    								data.startOfTurn=false;
+    							
+    								activateDone();
+    						}
     						return;
     					}
-    					return;
 
+    					];
+
+    					var gameFunctions = [
+    			//Deployment function
+    			function (area,territory){
+    				console.log(data.unitCount);
+    				console.log(data.turn);
+
+    				if(data.unitCount[data.turn] > 0){
+    					if(	map.area[area].territories[territory].color == data.players[data.turn].color){
+    						map.area[area].territories[territory].units++;
+    						data.unitCount[data.turn]--;
+    						data.unitsOut++;
+    						data.message = messages.deployment + data.unitCount[data.turn];
+    						return;
+    					}
+    					alert("You have to place your units on a friendly territory");
+    				}else{
+    					alert("No reinforcements left, start next phase");
     				}
-    				con.nextStartPhase();
     			}
+    			,
+    			//Attack select
+    			function (area,territory){
+    				selection.isSelected = true;
+    				selection.area = area;
+    				selection.territory = territory;
 
+    				//Mark terrotiry
+    				highlighting.markAsSelected('#' + $(obj[0]).attr('id'));
+    				
+
+    			}
+    			,
+    			//Attack target
+    			function (area,territory){
+    				//is adjcent
+    				//....
+
+
+    			}
+    			,
+    			//Achivement
+    			function (area,territory){
+    			}
+    			,
+    			//Movement select
+    			function (area,territory){
+
+    			},
+    			//Movment target
+    			function (area,territory){
+
+    			}
     			];
     			this.territoryClick = function(obj){
-    				console.log("Phase : " + data.startPhase);
-    				console.log("Turn : " + data.turn);
     				var pos = $(obj[0]).attr('title').split(" ");
     				var area = parseInt(pos[0]);
     				var territory = parseInt(pos[1]);
-    				if(self.isStartPhase){
-    					
-    					startPhaseFunctions[data.startPhase](self,area,territory);
-    					self.updateScorePanel();
-    					console.log("data");
-    					console.log(data);
-    				}
-    			}
-    			this.updateScorePanel = function(){
-    				ui.setTurn(self.getCurrentPlayer());
-    				ui.setPhase(self.getCurrentPhase());
-    			}
-    			this.updateTerritoryUI = function(area,territory){
-    				var middle = self.getMiddle(area,territory);
-    				ui.drawTerritoryStats(middle[0],middle[1],map.area[area].territories[territory].units);
-    			}
 
-}
-    		
+    				if(self.isStartPhase()){
+
+    					startPhaseFunctions[data.startPhase](self,area,territory);
+    					var color = self.getColor(area,territory);
+    					console.log(color);
+    					if(color !=""){
+    						console.log("Changing color");
+    						console.log($(obj[0]).attr('id'));
+    						highlighting.setTerritoriumColor('#' + $(obj[0]).attr('id'),''+color);
+    					}
+
+    				//gamephase
+    			}else{
+
+    				//Deployment phase
+    				if(data.gamePhase == 0){
+    					gameFunctions[data.gamePhase](area,territory);
+    				}
+    				//Attack phase
+    				else if(data.gamePhase == 1){
+
+    					//from
+
+    					//to
+    				}
+    				else if(data.gamePhase == 2){
+
+    				}
+    				else if(data.gamePhase == 2){
+
+    				}
+    				
+    			}
+    			setTimeout(function(){
+    				var ctx = $("#boardContainer div canvas")[0].getContext("2d");
+    				self.updateTerritoryUI();
+
+    			}, 50);
+    			self.updateScorePanel();
+
+
+    		}
+    		this.updateScorePanel = function(){
+    			ui.setTurn(self.getCurrentPlayer());
+    			ui.setPhase(self.getCurrentPhase());
+    			ui.setMessage(self.getCurrentMessage());
+    		}
+    		this.updateTerritoryUI = function(){
+
+    			for (var i = 0; i < map.area.length; i++) {
+    				for (var j = 0; j < map.area[i].territories.length; j++) {
+    					var middle = self.getMiddle(i,j);
+    					var x = middle[0];
+    					var y = middle[1];
+    					var units = map.area[i].territories[j].units;
+    					var base = map.area[i].territories[j].base;
+    					var hero = map.area[i].territories[j].hero;
+    					var color = map.area[i].territories[j].color;
+    					ui.drawTerritoryStats(x,y,units,base,hero,color);
+
+    				};
+    			};
+
+
+    		};
+
+    		this.setupTurn = function(){
+    			data.unitCount[data.turn] += self.countReinforcement();
+    			self.setMessage("Reinforcement: " + data.unitCount[data.turn]);
+    		}
+    		//Loops though all terrtories,bases etc and return the size of the current players reinforcement
+    		this.countReinforcement = function(){
+    			var reinforcement = 0;
+    			var bonus = 0;
+    			var current = data.players[data.turn].color;
+    			//loops planet
+    			for (var i = 0; i < map.area.length; i++) {
+    				var planetbonus = map.area[i].territories.length;
+    				var planet = 0;
+    				for (var j = 0; j < map.area[i].territories.length; j++) {
+    					var color = map.area[i].territories[j].color;
+    					if(color == current){
+    						if(map.area[i].territories[j].base){bonus++;}
+    						if(map.area[i].territories[j].mineral){bonus++;}
+    						bonus++;
+    						planet++;
+    					}
+
+
+
+    				};
+    				if(planet == planetbonus){
+    					reinforcement += map.area[i].bonus;
+    				}
+
+    			};
+
+    			reinforcement += (bonus/3);
+    			return reinforcement;
+    		}
+    		function activateDone(){
+    			$("#btnDone").bind('click',function(){
+    				self.nextGamePhase();
+    				self.updateScorePanel();
+    			});
+    		}
+
+    	}
+
 

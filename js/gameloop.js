@@ -5,19 +5,8 @@ var gameLoop = function(control){
 	uicontrol.setupBoard();
 	bindTerritoryClick(control);
 	control.updateScorePanel();
-	// bindTerritoryClick(control);
-
 };
 
-var setClickFunction = function(control){
-		$("#Map area").bind('click',function(){
-    		alert('unit placed');
-    		var pos = $(this).attr('title').split[" "];
-    		var area = parseInt(pos[0]);
-    		var territory = parseInt(pos[1]);
-    	});
-
-}
 
 
     var areaClick = function(area,id){
@@ -27,6 +16,7 @@ var setClickFunction = function(control){
     	$("#Map area").bind('click',function(){
 
     		control.territoryClick($(this));
+    	        highlighting.setTerritoriumColor()
     	});
     }
 
