@@ -10,15 +10,15 @@ var highlighting = {
 		$(id).data('maphilight', data);
 		$('#playboard').maphilight();
 	},
-	markAsSelected : function(id){
+	markAsSelected : function(id,color){
 		var data = $(id).data('maphilight')  || {};
-		data.fillColor = "FFFFFF";
+		data.fillColor = color ;
 		data.alwaysOn = true;
 		data.stroke = true
 		data.strokeColor= 'ff0000';
 		data.strokeOpacity= 1;
-		data.strokeWidth= 1;
-		data.fillOpacity  = 0.7;
+		data.strokeWidth= 3;
+		data.fillOpacity  = 0.35;
 		$(id).data('maphilight', data);
 		$('#playboard').maphilight();
 	}

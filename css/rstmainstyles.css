@@ -17,27 +17,60 @@
   	margin-left: auto;
   	margin-top: 20px;
 
+
   }
 
   .panel{
-  	width: 600px;
-  	height: 400px;
-  	/*background: url(../img/metal.jpg);*/
-  	background : black;
+  	opacity: 0;
+  	position: fixed;
+  	width: 800px;
+  	height: 540px;
+  	background: url(../img/hex.jpg);
+  	/*background : black;*/
+  	color : white;
+  	background-size: cover;
+  	border-radius: 10px;
+  	border :5px solid #2C3539;
+  	top : 50%;
+  	left :50%;
+  	margin-top: -270px;
+  	margin-left: -400px;
+
+  	 -webkit-transition: opacity 2s ease-in;
+       -moz-transition: opacity 2s ease-in;
+        -ms-transition: opacity 2s ease-in;
+         -o-transition: opacity 2s ease-in;
+            transition: opacity 2s ease-in;
+  }
+    .panelTop{
+  	width: 800px;
+  	height: 540px;
+  	background: url(../img/hex.jpg);
+  	/*background : black;*/
   	background-size: cover;
   	border-radius: 10px;
   	border :5px solid #2C3539;
   	position: absolute;
-  	top : 50%;
-  	margin-top:  -200px;
+  	text-align:  center;
+  }
+    .panelBottom{
+  	width: 800px;
+  	height: 540px;
+  	background: url(../img/hex.jpg);
+  	/*background : black;*/
+  	background-size: cover;
+  	border-radius: 10px;
+  	border :5px solid #2C3539;
+  	position: absolute;
   	text-align:  center;
   }
   .panel h1{
   	text-align: center;
+  	margin: 10px;
   }
   .raceicon{
-  	width : 50px;
-  	height :50px;
+  	width : 100px;
+  	height :100px;
   }
   img.raceicon.chosen { -webkit-filter: grayscale(0%); filter: grayscale(0%); }
   img.raceicon:hover { -webkit-filter: grayscale(0%); filter: grayscale(0%); }
@@ -108,12 +141,15 @@
 	vertical-align: center;
 	text-align: bottom;
 	margin:0 auto; 
-	background-color: #15317E;
+	/*background-color: #15317E;*/
+	  	background: url(../img/hex.jpg);
+	  	background-size: cover;
 	border-top-right-radius: 35px;
 	border-top-left-radius: 35px;
-	border-color : #8C9EFF;
-	border-style: solid ;
-	border-width: 2px;
+		border :5px solid #2C3539;
+	/*	border-color : #8C9EFF;
+		border-style: solid ;
+		border-width: 2px;*/
 	box-shadow: 2px 2px 1px #EEEEEE;
 
 }
@@ -175,12 +211,17 @@
 	vertical-align: bottom;
 	text-align: center;
 	margin:0 auto; 
-	background-color: #151B54;
+	/*background-color: #151B54;*/
 	border-bottom-right-radius: 35px;
 	border-bottom-left-radius: 35px;
-	border-color : #8C9EFF;
+	/*border-color : #8C9EFF;
 	border-style: solid ;
-	border-width: 2px;
+	border-width: 2px;*/
+		  	background: url(../img/hex.jpg);
+	  	background-size: cover;
+	border-top-right-radius: 35px;
+	border-top-left-radius: 35px;
+		border :5px solid #2C3539;
 	box-shadow: 2px 2px 1px #EEEEEE;
 
 }

@@ -286,6 +286,7 @@ function gameControl (d,m){
     				}
     				if(data.baseCount >= data.playerSize){
     				//Place base if territory dont have a base and finish turn
+    				data.message = messages.deployment + data.unitCount[data.turn];
     				con.nextStartPhase();
     				return;
     			}	},
@@ -300,8 +301,9 @@ function gameControl (d,m){
     							// self.updateTerritoryUI(area, territory);
     							data.unitCount[data.turn]--;
     							data.unitsOut++;
-    							data.message = messages.deployment + data.unitCount[data.turn];
+    						
     							con.turnComplete();
+    								data.message = messages.deployment + data.unitCount[data.turn];
     							if(data.unitsOut>=data.max[data.playerSize-3]){
     								data.turn = 0;
     								con.nextStartPhase();
@@ -315,8 +317,9 @@ function gameControl (d,m){
     						if(con.addReinforcement(area,territory)){
     							data.unitCount[data.turn]--;
     							data.unitsOut++;
-    								data.message = messages.deployment + data.unitCount[data.turn];
+    							
     							con.turnComplete();
+    							data.message = messages.deployment + data.unitCount[data.turn];
     							if(data.unitsOut>=data.max[data.playerSize-3]){
     								data.turn = 0;
     								con.nextStartPhase();
@@ -353,10 +356,10 @@ function gameControl (d,m){
 
     							//Begining of a new turn, player gets reinforcement
 
-    								self.setupTurn();
-    								data.startOfTurn=false;
+    							self.setupTurn();
+    							data.startOfTurn=false;
     							
-    								activateDone();
+    							activateDone();
     						}
     						return;
     					}
@@ -365,7 +368,7 @@ function gameControl (d,m){
 
     					var gameFunctions = [
     			//Deployment function
-    			function (area,territory){
+    			function (area,territory,obj){
     				console.log(data.unitCount);
     				console.log(data.turn);
 
@@ -384,37 +387,53 @@ function gameControl (d,m){
     			}
     			,
     			//Attack select
-    			function (area,territory){
-    				selection.isSelected = true;
-    				selection.area = area;
-    				selection.territory = territory;
+    			function (area,territory,obj){
+    				if(!selection.isSelected){
+    					selection.isSelected = true;
+    					selection.area = area;
+    					selection.id = '#' + $(obj[0]).attr('id');
+    					selection.territory = territory;
+    									//Mark terrotiry
+    					var color = self.getColor(area,territory);
+    					highlighting.markAsSelected(selection.id,color);
 
-    				//Mark terrotiry
-    				highlighting.markAsSelected('#' + $(obj[0]).attr('id'));
-    				
+    				}else{
+
+    					alert("Open attack panel");
+    					// self.attackandroll(area1, territory1,units, area2, territory2)
+    					selection.isSelected = false;
+    					//set territory to orignal state
+    					var color = self.getColor(selection.area,selection.territory);
+    					highlighting.setTerritoriumColor(selection.id,color);
+    				}
+
+
+        				
 
     			}
-    			,
-    			//Attack target
-    			function (area,territory){
-    				//is adjcent
-    				//....
-
-
-    			}
+    	
     			,
     			//Achivement
-    			function (area,territory){
+    			function (area,territory,obj){
+    				alert("show if player achived any Achivement");
     			}
     			,
-    			//Movement select
-    			function (area,territory){
-
+    			//Movement 
+    			function (area,territory,obj){
+    				if(!selection.isSelected){
+    					selection.isSelected = true;
+    					selection.area = area;
+    					selection.territory = territory;
+    					selection.id = '#' + $(obj[0]).attr('id');
+    					var color = self.getColor(area,territory);
+    					highlighting.markAsSelected('#' + $(obj[0]).attr('id'),color);
+    				}else{
+    					alert("open movement panel");
+    					var color = self.getColor(selection.area,selection.territor);
+    					highlighting.setTerritoriumColor(selection.id,color);
+    				}
     			},
-    			//Movment target
-    			function (area,territory){
-
-    			}
+    	
     			];
     			this.territoryClick = function(obj){
     				var pos = $(obj[0]).attr('title').split(" ");
@@ -422,6 +441,7 @@ function gameControl (d,m){
     				var territory = parseInt(pos[1]);
 
     				if(self.isStartPhase()){
+    					self.updateScorePanel();
 
     					startPhaseFunctions[data.startPhase](self,area,territory);
     					var color = self.getColor(area,territory);
@@ -434,24 +454,9 @@ function gameControl (d,m){
 
     				//gamephase
     			}else{
+    					gameFunctions[data.gamePhase](area,territory,obj);
 
-    				//Deployment phase
-    				if(data.gamePhase == 0){
-    					gameFunctions[data.gamePhase](area,territory);
-    				}
-    				//Attack phase
-    				else if(data.gamePhase == 1){
-
-    					//from
-
-    					//to
-    				}
-    				else if(data.gamePhase == 2){
-
-    				}
-    				else if(data.gamePhase == 2){
-
-    				}
+    		
     				
     			}
     			setTimeout(function(){
@@ -524,6 +529,12 @@ function gameControl (d,m){
     		function activateDone(){
     			$("#btnDone").bind('click',function(){
     				self.nextGamePhase();
+    				if(data.gamePhase == 0){
+    					self.turnComplete();
+    				}
+    				if(data.gamePhase ==2){
+    					alert("show achivements");
+    				}
     				self.updateScorePanel();
     			});
     		}

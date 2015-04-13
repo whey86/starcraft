@@ -105,8 +105,8 @@ removePanel : function(id,callback){
 	$(id).animate({
 			//genomskinlighet
 			'opacity': 0.0,
-			'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width'))) + 'px'
-		}, 2000, callback());
+			// 'margin-top' : (parseInt($(id).parent().css('height')) - parseInt($(id).css('width'))) + 'px'
+		}, 4000, callback());
 },
 
 addPanel : function(id,callback){
@@ -114,8 +114,11 @@ addPanel : function(id,callback){
 	$(id).animate({
 			//genomskinlighet
 			'opacity': 100.0,
-			'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width')))/3 + 'px'
-		}, 1000, callback());
+			//'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width')))/3 + 'px'
+
+		}, 4000, callback());
+	/*$(id).addClass('load');
+	callback();*/
 },
 territoriumPanel : function(territorium,id){
 	var temp = id.split(" ");
