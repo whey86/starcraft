@@ -5,10 +5,6 @@ function UIControl(c){
 	this.myCanvas;
 	this.control = c;
 
-	$("body").empty();
-	$("body").css('background-image', 'none');
-	$("body").css("background-color","#000011");
-
 
 	this.setTurn = function(player){
 		$('#titleTurn').text(player.name);
@@ -22,7 +18,7 @@ function UIControl(c){
 	}
 
 	this.addInfoPanel = function(){
-		$("body").append('<div id="scorepanel"></div>');
+		$("#playersTop").append('<div id="scorepanel"></div>');
 		// $("#scorepanel").append('<div id="score1"></div>');
 		$("#scorepanel").append("<h1 id='titleTurn' class='score'></h1>");
 		// $("#scorepanel").append('<div id="score2"></div>');
@@ -75,8 +71,7 @@ function UIControl(c){
 };
 
 this.addBoard = function(){
-	$("body").append('<div id="boardContainer"></div>');
-	$("#boardContainer").append(boardImg);
+
 	$("#boardContainer").append(map);
 	for (var i = 0; i < 42; i++) {
 		$("#Map").append($(area1[i]).attr('id','terr' + i));
@@ -100,17 +95,85 @@ this.addBoard = function(){
 
 
     	this.addBoard();
-    	this.addInputPanel();
 	//Create canvas with the device resolution.
 	// selfmyCanvas = createHiDPICanvas(800, 540);
 	// this.addOverlayCanvas();
 }
 
 this.addInputPanel = function(){
-	$("body").append('<div id="inputpanel"></div>');
 	
-	$("#inputpanel").append('<div id="input1"></div>');
-	$("#input1").append("<button id='btnDone' class='score' >Done</button>");
+	$("#playersBottom").append('<div id="input1"></div>');
+	$("#input1").append("<button id='btnDone' class='score btnStyle' >Done</button>");
+	panel.fadeIn("#btnDone",function(){});
+}
+this.openAttackPanel = function(control,attackunits,defunits){
+	panel.close();
+	panel.fadeOut("#btnDone",function(){
+		$("#btnDone").remove();
+
+	});
+	panel.fadeOut("#playersTop *",function(){
+		$("#playersTop *").remove();
+		panel.attack(self,control,attackunits,defunits);
+
+	});
+
+
+}
+this.openMovePanel = function(control){
+	panel.close();
+	panel.fadeOut("#btnDone",function(){
+		$("#btnDone").remove();
+
+	});
+	panel.fadeOut("#playersTop *",function(){
+		$("#playersTop *").remove();
+		
+		$("#playersTop").append("<h1>Movement</h1>");
+
+		$("#playersBottom").append('<div id="unitsContainer"/>');
+		$('#unitsContainer').append("<button id='btnSub' class='btnStyle btnA' >-</button>");
+		$('#unitsContainer').append("<h1 id='attackingUnits' class='btnA'>1</h1>");
+		$('#unitsContainer').append("<button id='btnAdd' class='btnStyle'btnA >+</button>");
+		$('#playersBottom').append("<button id='btnEndBattle' class='btnStyle' >End</button>");
+		$('#btnAdd').bind('click', function(){
+			var value =	parseInt($('#attackingUnits').text());
+			if(control.maxAttack(value)){
+				alert("You dont have so many units");
+				return;
+			}
+			$('#attackingUnits').text(''+(value+1) );
+		});
+		$('#btnSub').bind('click', function(){
+			var value =	parseInt($('#attackingUnits').text());
+			if(value==1){
+				alert("You must transfer atlest one unit");
+				return;
+			};
+			$('#attackingUnits').text(''+(value-1) );
+		});
+		$('#btnEndBattle').bind('click', function(){
+			panel.fadeOut("#playersTop *",function(){});
+			panel.fadeOut("#playersBottom *",function(){
+		
+					var val = parseInt($('#attackingUnits').text());
+					control.winTransfer(val);
+					control.getCurrentPlayer().moves--;
+				
+
+				panel.open(function(){
+
+					$('#playersTop *').remove();
+					$('#playersBottom *').remove();
+					self.addInfoPanel();
+					control.updateScorePanel();
+					control.updateTerritoryUI();
+					control.activateDone();
+				});
+			});
+
+		});
+	});
 }
 this.drawTerritoryStats = function(x, y, units,base,hero,color){
 	console.log("APPENDING " +base);
@@ -119,7 +182,7 @@ this.drawTerritoryStats = function(x, y, units,base,hero,color){
 // 	'left' :'x'
 // })
 
-	var ctx = $("#boardContainer div canvas")[0].getContext("2d");
+var ctx = $("#boardContainer div canvas")[0].getContext("2d");
          // var ctx = c;
       // ctx.clearRect ( x-7 , y-22 ,35,35);
       // ctx.fillRect(x-7 , y-22 ,35,35);
@@ -137,21 +200,21 @@ this.drawTerritoryStats = function(x, y, units,base,hero,color){
       	ctx.stroke();
       }
 
- 
+
 
       if(hero==true){
       	ctx.fillStyle = '#FFD700';
       }else{
-      	      ctx.fillStyle = 'white';
+      	ctx.fillStyle = 'white';
       }
       if(units != 0 || units != null){
-           ctx.beginPath();
-      ctx.font = "15px Sans-serif"
+      	ctx.beginPath();
+      	ctx.font = "15px Sans-serif"
 
-      ctx.fillText(units, x, y);
-            	ctx.lineWidth = 1;
-      ctx.strokeStyle = '#003300';
-      ctx.stroke();
+      	ctx.fillText(units, x, y);
+      	ctx.lineWidth = 1;
+      	ctx.strokeStyle = '#003300';
+      	ctx.stroke();
 
       }
 

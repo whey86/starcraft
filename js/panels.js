@@ -3,7 +3,7 @@ var paneldata ={
 		title : "Choose number of players",
 	},
 	playerID : {
-		title : "Each player rolls a dice, highest writes in their name first"
+		title : "Enter name and race"
 	}
 };
 
@@ -12,28 +12,32 @@ var panel = {
 	startpanel : function(control){
 		console.log("startpanel");
 
-		$("body").append("<div class='panel' id='players'></div>");
-		$("#players").append("<h1></<h1>");
+		$("body").append("<div class='panelTop' id='playersTop'></div>");
+		$("body").append("<div class='panelBottom' id='playersBottom'></div>");
+		$("#playersTop").append("<h1></<h1>");
 
-		panel.addPanel("#players", function(){
-			$("#players h1").text(paneldata.numberOfPlayers.title);
+		panel.fadeIn("#playersTop", function(){
+			$("#playersTop h1").text(paneldata.numberOfPlayers.title);
+		});
+		panel.fadeIn("#playersBottom", function(){
 
-			$("#players").append("<input type='button' class='btnPlayers' value='2'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='3'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='4'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='5'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='6'/>");
+
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='3'/>");
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='4'/>");
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='5'/>");
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='6'/>");
 
 		});
 		//action for selection of player size
 		$(".btnPlayers").bind('click', function(){
-
+			console.log('click');
 				//record number of players 
 				control.setPlayerSize(parseInt(this.value));
 				control.setPlayers(players.slice(0,parseInt(this.value)));
-				panel.removePanel("#players",function(){});
-				$("#players").remove();
-				panel.playerPanel(control);
+				panel.fadeOut("#playersTop *", function(){$('#playersTop *').html('');});
+				panel.fadeOut(".panelBottom *", function(){	$('.panelBottom *').remove(); panel.playerPanel(control);});
+
+				
 
 			});
 	},
@@ -41,22 +45,23 @@ var panel = {
 	playerPanel : function(control){
 		console.log("playerpanel");
 
-		$("body").append("<div class='panel' id='playerIds'></div>");
-		$("#playerIds").append("<h1></<h1>");
-		$("#playerIds h1").text(paneldata.playerID.title);
+		$("#playersTop").append("<h1 id='playerTitle'><h1>");
+		$("#playerTitle").text(paneldata.playerID.title);
+		$("#playersTop *").css('opacity','0')
+		panel.fadeIn("#playersTop *", function(){});
 
-		panel.addPanel("#playerIds", function(){
+
 		console.log(control.getGameData());
-			for (var i = 1; i <= control.getPlayerSize(); i++) {
-				var value = "Player" + i;
+		for (var i = 1; i <= control.getPlayerSize(); i++) {
+			var value = "Player" + i;
 
-				var color = players[i-1].color;
+			var color = players[i-1].color;
 
-				$("#playerIds").append('<input id="player'+color+'" type="text" style="width:100px">');
-				$("#player"+color).val(value);
-				$("#playerIds").append('<img id="terranimg'+i+'" class="raceicon playerrow'+i+'"src="img/terran.jpg"/>');
-				$("#playerIds").append('<img id="protossimg'+i+'" class="raceicon playerrow'+i+'"src="img/protoss.jpg"/>');
-				$("#playerIds").append('<img id="zergimg'+i+'" class="raceicon playerrow'+i+'"src="img/zerg.jpg"/>');
+			$("#playersBottom").append('<input id="player'+color+'" type="text" class="pplay inputPlayer" style="width:100px">');
+			$("#player"+color).val(value);
+			$("#playersBottom").append('<img id="terranimg'+i+'" class="raceicon playerrow'+i+' terran pplay"src="img/terran.png"/>');
+			$("#playersBottom").append('<img id="protossimg'+i+'" class="raceicon playerrow'+i+' pplay"src="img/protoss.jpg"/>');
+			$("#playersBottom").append('<img id="zergimg'+i+'" class="raceicon playerrow'+i+' pplay"src="img/zerg.png"/>');
 				//Click on  img
 				$(".playerrow"+i).bind('click',function(){
 
@@ -68,15 +73,19 @@ var panel = {
 					control.setPlayerRace(num,id.split('img')[0]);
 
 				});
+				if(i>3){
+					$("#playersBottom").append('<br/>');
+				}
 
-				$("#playerIds").append('<Br/>');
 			};
 
-			$("#playerIds").append('<Br/>');
+
 			//Button and action to finish 
-			$("#playerIds").append('<input id="btnPlayerDone" type="button" value="Done"  style="width:100px">');
+			$("#playersBottom").append('<br/>');
+			$("#playersBottom").append('<input id="btnPlayerDone" class="btnStyle" type="button" value="Done"  style="width:100px">');
 
 			$("#btnPlayerDone").bind('click',function(){
+				console.log("Done");
 				//Check that all players has chosen a race;
 				for (var i = 1; i <= control.getPlayerSize(); i++) {
 					var color = control.getPlayerColor(i-1);
@@ -88,37 +97,172 @@ var panel = {
 					}
 					control.setPlayerName(i-1,name);
 				};
-		// Launch game;
-		panel.removePanel("#playerIds",function(){
-			$("#playerIds").remove();
-			gameLoop(control);
-		});
-	});
+
+				$('<div id="boardContainer"></div>').insertAfter("#playersTop");
+				$("#boardContainer").append(boardImg);
+
+				panel.open(function(){
+					$("#playersTop *").remove();
+					$("#playersBottom *").remove();
+					gameLoop(control);
+				});
+			});
+			$("#playersTop *").css('opacity','0')
+			panel.fadeIn("#playersBottom *", function(){	});
 
 
-		});
+		},
 
-},
-
-removePanel : function(id,callback){
-	console.log("removing panel ...");
-	$(id).animate({
+		fadeOut : function(id,callback){
+			console.log("removing panel ...");
+			$(id).animate({
 			//genomskinlighet
 			'opacity': 0.0,
-			// 'margin-top' : (parseInt($(id).parent().css('height')) - parseInt($(id).css('width'))) + 'px'
-		}, 4000, callback());
-},
+		}, 3000, callback());
+		},
 
-addPanel : function(id,callback){
-	console.log("adding panel " + id);
-	$(id).animate({
+		fadeIn : function(id,callback){
+			console.log("adding panel " + id);
+			$(id).animate({
 			//genomskinlighet
 			'opacity': 100.0,
-			//'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width')))/3 + 'px'
 
-		}, 4000, callback());
+		}, 5000, callback());
 	/*$(id).addClass('load');
 	callback();*/
+},
+slideUp : function(id,callback){
+	$(id).animate({
+
+		'marginTop': "-=270px",
+	}, 3000, callback());
+},
+slideDown : function(id,callback){
+	$(id).animate({
+
+		'marginTop': "+=270px",
+	}, 3000, callback());
+},
+open : function(callback){
+	$("#playersTop").animate({
+		'marginTop': "-=300px",
+	}, { duration: 2000, queue: false });
+	$("#playersBottom").animate({
+
+		'marginTop': "+=270px",
+	},{ duration: 2000, queue: false });
+	$("#boardContainer").animate({
+
+		'marginTop': "-=270px",
+		'height' : "+=540px",
+	}, { duration: 2000, queue: false });
+	callback();
+},
+close : function(){
+	$("#playersTop").animate({
+		'marginTop': "+=300px",
+	}, { duration: 2000, queue: false });
+	$("#playersBottom").animate({
+
+		'marginTop': "-=270px",
+	},{ duration: 2000, queue: false });
+	$("#boardContainer").animate({
+
+		'marginTop': "+=270px",
+		'height' : "-=540px",
+	}, { duration: 2000, queue: false });
+
+},
+attack : function(ui,control,attackunits,defunits){
+	$("#playersTop").append("<div id='attackTitle'>");
+	$("#attackTitle").append("<h2 id='atitle' class='attacker'>ATTACKER Units: "+attackunits+"</h2>");
+	$("#attackTitle").append("<h3 id='attackerOutcome'  class='attacker'>");
+	$("#attackTitle").append("<h2 id='dtitle' class='defender'>DEFENDER Units: "+defunits+"</h2>");
+	$("#attackTitle").append("<h3 id='defenderOutcome' class='defender'>");;
+	$("#playersTop").append("<br/>");
+	$("#playersTop").append("<div id='dices'>");
+	$("#dices").append("<h3  class='attacker' >Attack roll--></>");
+	$("#dices").append("<h3 id='diceA1' class='dice attacker'/>");
+	$("#dices").append("<h3 id='diceA2'class='dice attacker'/>");
+	$("#dices").append("<h3 id='diceA3'class='dice attacker'/>");
+	$("#dices").append("<h3 class='defender'><--Defend roll</>");
+	$("#dices").append("<h3 id='diceD1'class='dice defender'/>");
+	$("#dices").append("<h3 id='diceD2'class='dice defender'/>");
+	$("#playersBottom").append('<div id="unitsContainer"/>');
+	$('#unitsContainer').append("<button id='btnSub' class='btnStyle btnA' >-</button>");
+	$('#unitsContainer').append("<h1 id='attackingUnits' class='btnA'>1</h1>");
+	$('#unitsContainer').append("<button id='btnAdd' class='btnStyle'btnA >+</button>");
+	$('#playersBottom').append("<br/>");
+	$('#playersBottom').append("<button id='btnRoll' class='btnStyle' >Roll!</button>");
+	$('#playersBottom').append("<button id='btnEndBattle' class='btnStyle' >End</button>");
+
+	var win = false;
+	$('#btnRoll').bind('click', function(){
+		console.log("ROLLING ROLLING");
+		var value =	parseInt($('#attackingUnits').text());
+		$('#attackingUnits').text(1);
+		if(control.reciveAttack(value)){
+			 $('#btnRoll').prop("disabled",true);
+ 			$('#btnEndBattle').prop("disabled",true);
+			setTimeout(function(){
+				panel.fadeOut("#playersTop *",function(){
+
+
+					$('#playersTop *').remove();
+					$('#btnRoll').remove();
+					$('#attackingUnits').text(1)
+					$('#playersTop').append("<h1 class='attacker'>You won! Enter transfer size and press end to return</h1>");			
+					win = true;
+					$('#btnEndBattle').prop("disabled",false);
+				});
+
+			}, 3000);
+
+
+		}
+	});
+	$('#btnAdd').bind('click', function(){
+		var value =	parseInt($('#attackingUnits').text());
+		if(control.maxAttack(value)){
+			alert("You dont have so many units");
+			return;
+		}
+		if(value > 3){
+			alert("Maxmium units per attack is 3");
+			return;
+		}
+		$('#attackingUnits').text(''+(value+1) );
+	});
+	$('#btnSub').bind('click', function(){
+		var value =	parseInt($('#attackingUnits').text());
+		if(value==1){
+			alert("You must attack with at least one unit");
+			return;
+		};
+		$('#attackingUnits').text(''+(value-1) );
+	});
+	$('#btnEndBattle').bind('click', function(){
+		panel.fadeOut("#playersTop *",function(){});
+		panel.fadeOut("#playersBottom *",function(){
+			if(win){
+				var val = parseInt($('#attackingUnits').text());
+				control.winTransfer(val);
+				win=false;
+			}
+
+			panel.open(function(){
+				
+				$('#playersTop *').remove();
+				$('#playersBottom *').remove();
+				ui.addInfoPanel();
+				control.updateScorePanel();
+				control.updateTerritoryUI();
+				control.activateDone();
+			});
+		});
+
+	});
+
 },
 territoriumPanel : function(territorium,id){
 	var temp = id.split(" ");

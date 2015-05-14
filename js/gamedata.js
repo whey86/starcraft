@@ -18,39 +18,30 @@ var gameData = {
 	map : null,
 	//Starting units for number of players -> 3, 4 ,5 , 6
 	startUnits : [5,25,20,15],
+	//Units out playing
 	unitsOut :0,
+	//Maximum units at start for different number of players
 	max : [5*3,25*4,20*5,15*6],
-	message : "",
+	//current message
+	message : "   ",
 	startOfTurn : true,
-	messages : 
-	{
-		Deployment : "Reinforcement left: ",
-
-	}
-
+	attacking : 0,
 
 
 }
 var players = [
-{color: "AA00FF", race : "zerg", name: "", taken: false},
-{color: "FF6D00", race : "protoss", name: "", taken: false},
-{color: "2962FF", race : "terran", name: "", taken: false},
-{color: "D50000", race : "terran", name: "", taken: false},
-{color: "FFEB3B", race : "protoss", name: "", taken: false},
-{color: "795548", race : "zerg", name: "", taken: false}
+{color: "AA00FF", race : "zerg", name: "", taken: false, moves : 0},
+{color: "FF6D00", race : "protoss", name: "", taken: false, moves : 0},
+{color: "2962FF", race : "terran", name: "", taken: false, moves : 0},
+{color: "D50000", race : "terran", name: "", taken: false, moves : 0},
+{color: "FFEB3B", race : "protoss", name: "", taken: false, moves : 0},
+{color: "795548", race : "zerg", name: "", taken: false, moves : 0}
 ]
 var player = {
 	name : null,
 	faction : null,
 }
-var mapskelleton = {
-	size: null,
-	premade: false,
-	area : new Array(),
-}
-var territorySkelleton = {
-	name : null, color : null, hero : false, units : 0, adjacent : [{area : 0, territory : 0}] 
-}
+//Map data
 var freemap = {
 		order : null,
 		size : null,
@@ -62,30 +53,30 @@ var freemap = {
 			bonus : 7,
 			territories : [
 			{ name : "Char aleph", color : "", hero : false, units : 0, middle:[89,103], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Glass flats", color : "", hero : false, units : 0 , middle:[183,90], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Burning rift", color : "", hero : false, units : 0 , middle:[168,135], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Death valley", color : "", hero : false, units : 0 , middle:[243,111], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Bone trench", color : "", hero : false, units : 0 , middle:[282,159], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Dauntless plateau", color : "", hero : false, units : 0 , middle:[285,215], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Hells gates", color : "", hero : false, units : 0 , middle:[252,282], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Nydus network", color : "", hero : false, units : 0 , middle:[204,236], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Primary hive cluster", color : "", hero : false, units : 0 , middle:[145,212], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Acid marsh", color : "", hero : false, units : 0 , middle:[93,195], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Eris", color : "", hero : false, units : 0 , middle:[193,318], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Ate", color : "", hero : false, units : 0, middle:[343,264], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] }
+			{ name : "Glass flats", color : "", hero : false, units : 0 , middle:[183,90], adjacent : [{area : 0, territory : 0}, {area : 0, territory : 2},{area : 0, territory : 3}]},
+			{ name : "Burning rift", color : "", hero : false, units : 0 , middle:[168,135], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 3},{area : 0, territory : 8},{area : 0, territory : 0}]},
+			{ name : "Death valley", color : "", hero : false, units : 0 , middle:[243,111], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 7},{area : 0, territory : 4}]},
+			{ name : "Bone trench", color : "", hero : false, units : 0 , middle:[282,159], adjacent : [{area : 0, territory : 3}, {area : 0, territory : 7},{area : 0, territory : 5}]},
+			{ name : "Dauntless plateau", color : "", hero : false, units : 0 , middle:[285,215], adjacent : [{area : 0, territory : 4}, {area : 0, territory : 6},{area : 0, territory : 7}]},
+			{ name : "Hells gates", color : "", hero : false, units : 0 , middle:[252,282], adjacent : [{area : 0, territory : 5}, {area : 0, territory : 7},{area : 0, territory : 10}]},
+			{ name : "Nydus network", color : "", hero : false, units : 0 , middle:[204,236], adjacent : [{area : 0, territory : 8}, {area : 0, territory : 3},{area : 0, territory : 4},{area : 0, territory : 5},{area : 0, territory : 6},{area : 0, territory : 10}]},
+			{ name : "Primary hive cluster", color : "", hero : false, units : 0 , middle:[145,212], adjacent : [{area : 0, territory : 0}, {area : 0, territory : 2},{area : 0, territory : 7},{area : 0, territory : 9}]},
+			{ name : "Acid marsh", color : "", hero : false, units : 0 , middle:[93,195], adjacent : [{area : 0, territory : 0}, {area : 0, territory : 8}]},
+			{ name : "Eris", color : "", hero : false, units : 0 , middle:[193,318], adjacent : [{area : 0, territory : 7}, {area : 0, territory : 6},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Ate", color : "", hero : false, units : 0, middle:[343,264], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 3, territory : 0}] }
 			]
 		},
 		{
 			name : "Korhal",
 			bonus : 5,
 			territories : [
-			{ name : "Wolfrec province", color : "", hero : false, units : 0, middle:[395,58], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Keresh province", color : "", hero : false, units : 0 , middle:[465,125], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Augustgrad", color : "", hero : false, units : 0 , middle:[374,143], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Radiated wastes", color : "", hero : false, units : 0 , middle:[319,158], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Ruins of styrling", color : "", hero : false, units : 0 , middle:[386,219], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Ursa", color : "", hero : false, units : 0, middle:[487,233], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Canis", color : "", hero : false, units : 0 , middle:[511,64], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Wolfrec province", color : "", hero : false, units : 0, middle:[395,58], adjacent : [{area : 1, territory : 3}, {area : 1, territory : 2},{area : 1, territory : 1},{area : 0, territory : 6}] },
+			{ name : "Keresh province", color : "", hero : false, units : 0 , middle:[465,125], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 2},{area : 1, territory : 5},{area : 1, territory : 6}]},
+			{ name : "Augustgrad", color : "", hero : false, units : 0 , middle:[374,143], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 1},{area : 1, territory : 2},{area : 1, territory : 3},{area : 1, territory : 4},{area : 1, territory : 5}]},
+			{ name : "Radiated wastes", color : "", hero : false, units : 0 , middle:[319,158], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 2},{area : 1, territory : 4},{area : 0, territory : 11}]},
+			{ name : "Ruins of styrling", color : "", hero : false, units : 0 , middle:[386,219], adjacent : [{area : 1, territory : 3}, {area : 1, territory : 2},{area : 1, territory : 5},{area : 0, territory : 11},{area : 4, territory : 4}]},
+			{ name : "Ursa", color : "", hero : false, units : 0, middle:[487,233], adjacent : [{area : 1, territory : 1}, {area : 1, territory : 2},{area : 1, territory : 4},{area : 4, territory : 5}]},
+			{ name : "Canis", color : "", hero : false, units : 0 , middle:[511,64], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 1},{area : 2, territory : 0}]},
 			]
 
 		},
@@ -93,16 +84,16 @@ var freemap = {
 			name : "Aiur",
 			bonus : 5,
 			territories : [
-			{ name : "Saalok", color : "", hero : false, units : 0, middle:[579,142], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Temple of the preservers", color : "", hero : false, units :0 , middle:[572,224], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "The great forum", color : "", hero : false, units : 0 , middle:[602,266], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Antioch province", color : "", hero : false, units : 0, middle:[655,300], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Scion province", color : "", hero : false, units : 0 , middle:[671,254], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Remains of the overmind", color : "", hero : false, units : 0 , middle:[696,217], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Feral hives", color : "", hero : false, units : 0 , middle:[695,170], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Saalok", color : "", hero : false, units : 0, middle:[579,142], adjacent : [{area : 2, territory : 1}, {area : 2, territory : 7},{area : 2, territory : 8},{area : 1, territory : 6}] },
+			{ name : "Temple of the preservers", color : "", hero : false, units :0 , middle:[572,224], adjacent : [{area : 2, territory : 0}, {area : 2, territory : 7},{area : 2, territory : 2}]},
+			{ name : "The great forum", color : "", hero : false, units : 0 , middle:[602,266], adjacent : [{area : 2, territory : 1}, {area : 2, territory : 4},{area : 2, territory : 7},{area : 2, territory : 3}]},
+			{ name : "Antioch province", color : "", hero : false, units : 0, middle:[655,300], adjacent : [{area : 2, territory : 2}, {area : 2, territory : 4},{area : 5, territory : 2}]},
+			{ name : "Scion province", color : "", hero : false, units : 0 , middle:[671,254], adjacent : [{area : 2, territory : 2}, {area : 2, territory : 3},{area : 2, territory : 5},{area : 2, territory : 5}]},
+			{ name : "Remains of the overmind", color : "", hero : false, units : 0 , middle:[696,217], adjacent : [{area : 2, territory : 4}, {area : 2, territory : 7},{area : 2, territory : 8},{area : 2, territory : 6}]},
+			{ name : "Feral hives", color : "", hero : false, units : 0 , middle:[695,170], adjacent : [{area : 2, territory : 5}, {area : 2, territory : 8},{area : 0, territory : 0}]},
 
-			{ name : "Velari province", color : "", hero : false, units : 0 , middle:[624,196], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false, middle:[643,159], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Velari province", color : "", hero : false, units : 0 , middle:[624,196], adjacent : [{area : 2, territory : 1}, {area : 2, territory : 0},{area : 2, territory : 8},{area : 2, territory : 5},{area : 2, territory : 4},{area : 2, territory : 2}]},
+			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false, middle:[643,159], adjacent : [{area : 2, territory : 0}, {area : 2, territory : 6},{area : 2, territory : 5},{area : 2, territory : 7}]},
 
 			]
 		},
@@ -111,10 +102,10 @@ var freemap = {
 			name : "Zerus",
 			bonus : 2,
 			territories : [
-			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false, middle:[187,393], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Sun valley", color : "", hero : false, units : 0 , middle:[215,434], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Fulmic highlands", color : "", hero : false, units : 0 , middle:[144,438], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Volatile cleft", color : "", hero : false, units : 0 , middle:[193,484], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]}
+			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false, middle:[187,393], adjacent : [{area : 0, territory : 10}, {area : 3, territory : 2},{area : 3, territory : 1}] },
+			{ name : "Sun valley", color : "", hero : false, units : 0 , middle:[215,434], adjacent : [{area : 3, territory : 0}, {area : 3, territory : 2},{area : 3, territory : 3}]},
+			{ name : "Fulmic highlands", color : "", hero : false, units : 0 , middle:[144,438], adjacent : [{area : 3, territory : 1}, {area : 3, territory : 0},{area : 3, territory : 3}]},
+			{ name : "Volatile cleft", color : "", hero : false, units : 0 , middle:[193,484], adjacent : [{area : 3, territory : 1},{area : 3, territory : 2}]}
 			]
 		},
 		//4
@@ -122,22 +113,22 @@ var freemap = {
 			name : "Mar sara",
 			bonus : 3,
 			territories : [
-			{ name : "Thisby", color : "", hero : false, units : 0, middle:[313,465], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Backwater station", color : "", hero : false, units : 0, base : false , middle:[387,445], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Diamondback wastelands", color : "", hero : false, units : 0, middle:[350,366], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Riksville", color : "", hero : false, units : 0, middle:[452,411], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Jacobs installation", color : "", hero : false, units : 0 , middle:[404,314], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Pyramus", color : "", hero : false, units : 0 , middle:[484,346], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Thisby", color : "", hero : false, units : 0, middle:[313,465], adjacent : [{area : 4, territory : 1}, {area : 4, territory : 2}] },
+			{ name : "Backwater station", color : "", hero : false, units : 0, base : false , middle:[387,445], adjacent : [{area : 4, territory : 0}, {area : 4, territory : 2},{area : 4, territory : 3}]},
+			{ name : "Diamondback wastelands", color : "", hero : false, units : 0, middle:[350,366], adjacent : [{area : 4, territory : 1}, {area : 4, territory : 0},{area : 4, territory : 4},{area : 4, territory : 3},{area : 4, territory : 5},{area : 0, territory : 11}] },
+			{ name : "Riksville", color : "", hero : false, units : 0, middle:[452,411], adjacent : [{area : 4, territory : 1}, {area : 4, territory : 2},{area : 4, territory : 5}] },
+			{ name : "Jacobs installation", color : "", hero : false, units : 0 , middle:[404,314], adjacent : [{area : 4, territory : 2}, {area : 4, territory : 5},{area : 0, territory : 11},{area : 1, territory : 4}]},
+			{ name : "Pyramus", color : "", hero : false, units : 0 , middle:[484,346], adjacent : [{area : 4, territory : 4}, {area : 4, territory : 2},{area : 4, territory : 3},{area : 1, territory : 4},{area : 1, territory : 5}]},
 			]
 		},
 		{
 			name : "Shakuras",
 			bonus : 2,
 			territories : [
-			{ name : "Rajal", color : "", hero : false, units : 0, base : false, middle:[559,483], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Katuul province", color : "", hero : false, units : 0 , middle:[581,408], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Talematros", color : "", hero : false, units :0 , middle:[640,372], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0, middle:[639,446], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] }
+			{ name : "Rajal", color : "", hero : false, units : 0, base : false, middle:[559,483], adjacent : [{area : 5, territory : 1},{area : 5, territory : 3}] },
+			{ name : "Katuul province", color : "", hero : false, units : 0 , middle:[581,408], adjacent : [{area : 5, territory : 2}, {area : 5, territory : 3},{area : 5, territory : 0},{area : 4, territory : 5}]},
+			{ name : "Talematros", color : "", hero : false, units :0 , middle:[640,372], adjacent : [{area : 5, territory : 1}, {area : 5, territory : 3},{area : 2, territory : 3}]},
+			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0, middle:[639,446], adjacent : [{area : 5, territory : 0}, {area : 5, territory : 1},{area : 5, territory : 2}] }
 			]
 		}
 		]

@@ -9,6 +9,11 @@ function gameControl (d,m){
 		area : null,
 		territory : null,
 	}
+	var selection2 = {
+		isSelected : false,
+		area : null,
+		territory : null,
+	}
 
 	/****************Set variables*********************/
 	this.setGameData = function(model){
@@ -149,34 +154,36 @@ function gameControl (d,m){
 		map.area[area2].territories[territory2].units += units;
 	},
 	this.isDefeated = function(area, territory){
-		if(map.area[area1].territories[territory1].units<=0){ return true;}
-		else{return false;}
-	};
-	this.isFree = function(area, territory){
-		var color = map.area[area].territories[territory].color;
-		console.log(color);
-		if( color == null || color == ""){return true;} else{return false;} 
-	}
-	this.getMiddle = function(area, territory){
-		return map.area[area].territories[territory].middle;
-	}
+		if(map.area[area].territories[territory].units<=0){
 
-	/*************** STARTPHASE ************************/
-
-	this.addHero= function(area, territory){
-		console.log(territory);
-		console.log(area);
-		console.log(map.area[area].territories[territory]);
-		if(map.area[area].territories[territory].color == data.players[data.turn].color){
-			map.area[area].territories[territory].hero = true;
-			return true;
-		}else{
-			return false;
+			return true;}
+			else{return false;}
+		};
+		this.isFree = function(area, territory){
+			var color = map.area[area].territories[territory].color;
+			console.log(color);
+			if( color == null || color == ""){return true;} else{return false;} 
 		}
-		
-	}
-	this.addBase= function(area, territory){
-		if(self.isFree(area, territory)){
+		this.getMiddle = function(area, territory){
+			return map.area[area].territories[territory].middle;
+		}
+
+		/*************** STARTPHASE ************************/
+
+		this.addHero= function(area, territory){
+			console.log(territory);
+			console.log(area);
+			console.log(map.area[area].territories[territory]);
+			if(map.area[area].territories[territory].color == data.players[data.turn].color){
+				map.area[area].territories[territory].hero = true;
+				return true;
+			}else{
+				return false;
+			}
+
+		}
+		this.addBase= function(area, territory){
+			if(self.isFree(area, territory)){
 			// map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].base = true;
 			// self.updateTerritoryUI(area, territory);
@@ -204,18 +211,40 @@ function gameControl (d,m){
 		};
 		return;
 	}
+	this.maxAttack = function(value){
+		var units = self.getUnits(selection.area,selection.territory);
+		if(units > value + 1){
+			return false;
+		}
+		return true;
+	},
+	this.winTransfer= function(value){
+		console.log(value);
+		if(self.getUnits(selection.area,selection.territory) > value ){
+			self.addUnits(selection2.area, selection2.territory, value);
+			self.removeUnits(selection.area, selection.territory, value);
+			return;
+		}else{
+			alert("Not a possible transfer");
+		}
+	}
+	this.reciveAttack = function(value){
+		return self.attackandroll(selection.area, selection.territory,value, selection2.area, selection2.territory);
+	}
 	//Attack an other territory
 	//int of area, int territory, int number of units to attack with, array with dices, defender area and territory
 	// returns true if opponent was defeated
 	this.attack = function(area1, territory1,units, attackroll, area2, territory2, defroll){
+		var killsAttacker = 0;
+		var killsDefender = 0;
 		//Wrong input
 		if(attackroll.length > units){
 			//Do alert before
 			alert("Not enough units to attack");
 			return false;
 		}
-		//is adjacent
-		if(!gameControl.isAdjacent(area1, territory1, area2, territory2)){
+		// is adjacent
+		if(!self.isAdjacent(area1, territory1, area2, territory2)){
 			//Do alert beforil
 			alert("terriories not adjacent");
 			return false;
@@ -223,44 +252,68 @@ function gameControl (d,m){
 
 		var a = attackroll.sort(function(a, b){return b-a});
 		var b = defroll.sort(function(a, b){return b-a});
-		if(gameControl.hasHero(area1, territory1)){
+		if(self.hasHero(area1, territory1)){
 			a[0]++;
 		}
-		if(gameControl.hasHero(area2, territory2)){
+		if(self.hasHero(area2, territory2)){
 			b[0]++;
+		}
+
+
+		for (var i = 0; i < a.length; i++) {
+			$("#diceA"+(i+1)).text(a[i]);
+		}
+		for (var i = 0; i < b.length; i++) {
+			$("#diceD"+(i+1)).text(b[i]);
 		}
 		for (var i = 0; i < Math.min(a.length,b.length); i++) {
 			console.log("attack : " + a[i]);
 			console.log("defend : " + b[i]);
+			
 			//If attacker wins
 			if(a[i]>b[i]){
-				gameControl.removeUnits(area2,territory2,1);
-				// self.updateTerritoryUI(area2, territory2);
-				if(gameControl.isDefeated(area2, territory2)){return true;}
+				$("#rollOutcome").text("Win");
+				self.removeUnits(area2,territory2,1);
+				killsAttacker++;
+
+				self.worldDomination(self.getCurrentPlayer().color);
+
 			//Defender wins
 		}else{
-			gameControl.removeUnits(area1,territory1,1);
-			// self.updateTerritoryUI(area1, territory1);
+			killsDefender++;
+			self.removeUnits(area1,territory1,1);
 		}
+
 	};
+
+	$("#atitle").text("ATTACKER Units  : " + self.getUnits(area1,territory1));
+	$("#dtitle").text("DEFENDER Units  : " + self.getUnits(area2,territory2));
+
+	if(self.isDefeated(area2, territory2)){
+		var color = self.getColor(area1, territory1);
+		map.area[area2].territories[territory2].color = color;
+		highlighting.setTerritoriumColor(selection2.id,color)
+		return true;
+	}
+
 	return false;
 
 };
 	//Same as attack but autorolls dices
 	this.attackandroll = function(area1, territory1,units, area2, territory2){
-		if(gameControl.getUnits(area1, territory1)<units || gameControl.getUnits(area1, territory1)==1){
+		if(self.getUnits(area1, territory1)<units || self.getUnits(area1, territory1)==1){
 			//no enough units
 			return;
 		}
 		var defcount = 1;
-		if(gameControl.getUnits(area1, territory1)>1){
+		if(self.getUnits(area2, territory2)>1){
 			defcount = 2;
 		}
-		gameControl.attack(area1, territory1,units, dice.rollMulti(units), area2, territory2, dice.rollMulti(defcount));
+		return self.attack(area1, territory1,units, dice.rollMulti(units), area2, territory2, dice.rollMulti(defcount));
 	};
 	//Returns boolean if 2 territories is adjacent
 	this.isAdjacent = function(area1, territory1, area2, territory2){
-		var adjacent = gameControl.getAdjacent(area1, territory1);
+		var adjacent = self.getAdjacent(area1, territory1);
 		console.log(adjacent);
 		for (var i = 0; i < adjacent.length; i++) {
 			if(adjacent[i].area == area2 && adjacent[i].territory == territory2){
@@ -301,9 +354,9 @@ function gameControl (d,m){
     							// self.updateTerritoryUI(area, territory);
     							data.unitCount[data.turn]--;
     							data.unitsOut++;
-    						
+
     							con.turnComplete();
-    								data.message = messages.deployment + data.unitCount[data.turn];
+    							data.message = messages.deployment + data.unitCount[data.turn];
     							if(data.unitsOut>=data.max[data.playerSize-3]){
     								data.turn = 0;
     								con.nextStartPhase();
@@ -359,7 +412,7 @@ function gameControl (d,m){
     							self.setupTurn();
     							data.startOfTurn=false;
     							
-    							activateDone();
+    							self.activateDone();
     						}
     						return;
     					}
@@ -389,29 +442,48 @@ function gameControl (d,m){
     			//Attack select
     			function (area,territory,obj){
     				if(!selection.isSelected){
+    					if(self.getUnits(area,territory)<2){
+    						alert("not enough untis to attack");
+    						return;
+    					}
+    					if(self.getColor(area,territory) != data.players[data.turn].color){
+    						alert("That's not your territory");
+    						return;
+    					}
     					selection.isSelected = true;
     					selection.area = area;
     					selection.id = '#' + $(obj[0]).attr('id');
     					selection.territory = territory;
-    									//Mark terrotiry
+    					//Mark terrotiry
     					var color = self.getColor(area,territory);
     					highlighting.markAsSelected(selection.id,color);
 
     				}else{
-
-    					alert("Open attack panel");
+    					if(self.getColor(area,territory) == data.players[data.turn].color){
+    						alert("You cant attack yourself silly!");
+    						return;
+    					}
+    					if(!self.isAdjacent(selection.area, selection.territory, area, territory)){
+												//Do alert beforil
+												alert("terriories not adjacent");
+												return false;
+											};
+											selection2.area = area;
+											selection2.id = '#' + $(obj[0]).attr('id');
+											selection2.territory = territory;
+											ui.openAttackPanel(self,self.getUnits(selection.area,selection.territory),self.getUnits(area,territory));
     					// self.attackandroll(area1, territory1,units, area2, territory2)
     					selection.isSelected = false;
-    					//set territory to orignal state
+    					//set territory to orignal state (remove mark)
     					var color = self.getColor(selection.area,selection.territory);
     					highlighting.setTerritoriumColor(selection.id,color);
     				}
 
 
-        				
+
 
     			}
-    	
+
     			,
     			//Achivement
     			function (area,territory,obj){
@@ -420,6 +492,14 @@ function gameControl (d,m){
     			,
     			//Movement 
     			function (area,territory,obj){
+    				if(data.players[data.turn]<1){
+    					alert("you have no movements left");
+    					return;
+    				}
+    				if(self.getColor(area,territory) != self.getCurrentPlayer().color){
+    					alert("Not your territory");
+    					return;
+    				}
     				if(!selection.isSelected){
     					selection.isSelected = true;
     					selection.area = area;
@@ -428,13 +508,26 @@ function gameControl (d,m){
     					var color = self.getColor(area,territory);
     					highlighting.markAsSelected('#' + $(obj[0]).attr('id'),color);
     				}else{
-    					alert("open movement panel");
-    					var color = self.getColor(selection.area,selection.territor);
+    					if(!self.isAdjacent(selection.area, selection.territory, area, territory)){
+												//Do alert beforil
+												alert("terriories not adjacent");
+												return false;
+											};
+											selection2.area = area;
+											selection2.territory = territory;
+											selection2.id = '#' + $(obj[0]).attr('id');
+											selection.isSelected = false;
+											ui.openMovePanel(self);
+    					//set territory to orignal state (remove mark)
+    					var color = self.getColor(selection.area,selection.territory);
     					highlighting.setTerritoriumColor(selection.id,color);
+
     				}
     			},
-    	
+
     			];
+
+    			// this metods runs everytime the map is clicked, in some sense the gameloop
     			this.territoryClick = function(obj){
     				var pos = $(obj[0]).attr('title').split(" ");
     				var area = parseInt(pos[0]);
@@ -454,9 +547,9 @@ function gameControl (d,m){
 
     				//gamephase
     			}else{
-    					gameFunctions[data.gamePhase](area,territory,obj);
+    				gameFunctions[data.gamePhase](area,territory,obj);
 
-    		
+
     				
     			}
     			setTimeout(function(){
@@ -468,11 +561,13 @@ function gameControl (d,m){
 
 
     		}
+    		//Updates scorepanel
     		this.updateScorePanel = function(){
     			ui.setTurn(self.getCurrentPlayer());
     			ui.setPhase(self.getCurrentPhase());
     			ui.setMessage(self.getCurrentMessage());
     		}
+    		//Updates the map UI
     		this.updateTerritoryUI = function(){
 
     			for (var i = 0; i < map.area.length; i++) {
@@ -491,7 +586,7 @@ function gameControl (d,m){
 
 
     		};
-
+    		//
     		this.setupTurn = function(){
     			data.unitCount[data.turn] += self.countReinforcement();
     			self.setMessage("Reinforcement: " + data.unitCount[data.turn]);
@@ -523,20 +618,48 @@ function gameControl (d,m){
 
     			};
 
-    			reinforcement += (bonus/3);
+    			reinforcement += Math.floor(bonus/3);
+    			if(reinforcement<3){
+    				reinforcement=3;
+    			}
     			return reinforcement;
     		}
-    		function activateDone(){
+    		//Metods thats sets up the game after the predeploymentphase
+    		this.activateDone = function (){
+    			ui.addInputPanel();
     			$("#btnDone").bind('click',function(){
     				self.nextGamePhase();
     				if(data.gamePhase == 0){
+
     					self.turnComplete();
+    					data.players[data.turn].moves=1;
+    					self.setupTurn();
+    				}
+    				if(data.gamePhase == 1){
+    					data.message = "Click on territories to do attacks(Select and target)";
     				}
     				if(data.gamePhase ==2){
     					alert("show achivements");
+    					data.message = "Click on a territory to show achivements";
     				}
     				self.updateScorePanel();
+    				if(data.gamePhase ==3){
+    					data.message = "Movements left: " + data.players[data.turn].moves;
+    				}
     			});
+    		}
+    		//Check if the world is dominated by color
+    		this.worldDomination = function(color){
+    			var bonus = 0;
+    			for (var i = 0; i < map.area.length; i++) {
+    				for (var j = 0; j < map.area[i].territories.length; j++) {
+    					if(map.area[i].territories[j].color != color){
+    						return false;
+    					}
+    				};
+
+    			};
+    			alert("GAME OVER, Player " + getCurrentPlayer.name + " wins the game!" );
     		}
 
     	}

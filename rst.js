@@ -167,6 +167,11 @@ function gameControl (d,m){
 		area : null,
 		territory : null,
 	}
+	var selection2 = {
+		isSelected : false,
+		area : null,
+		territory : null,
+	}
 
 	/****************Set variables*********************/
 	this.setGameData = function(model){
@@ -307,34 +312,36 @@ function gameControl (d,m){
 		map.area[area2].territories[territory2].units += units;
 	},
 	this.isDefeated = function(area, territory){
-		if(map.area[area1].territories[territory1].units<=0){ return true;}
-		else{return false;}
-	};
-	this.isFree = function(area, territory){
-		var color = map.area[area].territories[territory].color;
-		console.log(color);
-		if( color == null || color == ""){return true;} else{return false;} 
-	}
-	this.getMiddle = function(area, territory){
-		return map.area[area].territories[territory].middle;
-	}
+		if(map.area[area].territories[territory].units<=0){
 
-	/*************** STARTPHASE ************************/
-
-	this.addHero= function(area, territory){
-		console.log(territory);
-		console.log(area);
-		console.log(map.area[area].territories[territory]);
-		if(map.area[area].territories[territory].color == data.players[data.turn].color){
-			map.area[area].territories[territory].hero = true;
-			return true;
-		}else{
-			return false;
+			return true;}
+			else{return false;}
+		};
+		this.isFree = function(area, territory){
+			var color = map.area[area].territories[territory].color;
+			console.log(color);
+			if( color == null || color == ""){return true;} else{return false;} 
 		}
-		
-	}
-	this.addBase= function(area, territory){
-		if(self.isFree(area, territory)){
+		this.getMiddle = function(area, territory){
+			return map.area[area].territories[territory].middle;
+		}
+
+		/*************** STARTPHASE ************************/
+
+		this.addHero= function(area, territory){
+			console.log(territory);
+			console.log(area);
+			console.log(map.area[area].territories[territory]);
+			if(map.area[area].territories[territory].color == data.players[data.turn].color){
+				map.area[area].territories[territory].hero = true;
+				return true;
+			}else{
+				return false;
+			}
+
+		}
+		this.addBase= function(area, territory){
+			if(self.isFree(area, territory)){
 			// map.area[area].territories[territory].color = data.players[data.turn].color;
 			map.area[area].territories[territory].base = true;
 			// self.updateTerritoryUI(area, territory);
@@ -362,18 +369,40 @@ function gameControl (d,m){
 		};
 		return;
 	}
+	this.maxAttack = function(value){
+		var units = self.getUnits(selection.area,selection.territory);
+		if(units > value + 1){
+			return false;
+		}
+		return true;
+	},
+	this.winTransfer= function(value){
+		console.log(value);
+		if(self.getUnits(selection.area,selection.territory) > value ){
+			self.addUnits(selection2.area, selection2.territory, value);
+			self.removeUnits(selection.area, selection.territory, value);
+			return;
+		}else{
+			alert("Not a possible transfer");
+		}
+	}
+	this.reciveAttack = function(value){
+		return self.attackandroll(selection.area, selection.territory,value, selection2.area, selection2.territory);
+	}
 	//Attack an other territory
 	//int of area, int territory, int number of units to attack with, array with dices, defender area and territory
 	// returns true if opponent was defeated
 	this.attack = function(area1, territory1,units, attackroll, area2, territory2, defroll){
+		var killsAttacker = 0;
+		var killsDefender = 0;
 		//Wrong input
 		if(attackroll.length > units){
 			//Do alert before
 			alert("Not enough units to attack");
 			return false;
 		}
-		//is adjacent
-		if(!gameControl.isAdjacent(area1, territory1, area2, territory2)){
+		// is adjacent
+		if(!self.isAdjacent(area1, territory1, area2, territory2)){
 			//Do alert beforil
 			alert("terriories not adjacent");
 			return false;
@@ -381,44 +410,68 @@ function gameControl (d,m){
 
 		var a = attackroll.sort(function(a, b){return b-a});
 		var b = defroll.sort(function(a, b){return b-a});
-		if(gameControl.hasHero(area1, territory1)){
+		if(self.hasHero(area1, territory1)){
 			a[0]++;
 		}
-		if(gameControl.hasHero(area2, territory2)){
+		if(self.hasHero(area2, territory2)){
 			b[0]++;
+		}
+
+
+		for (var i = 0; i < a.length; i++) {
+			$("#diceA"+(i+1)).text(a[i]);
+		}
+		for (var i = 0; i < b.length; i++) {
+			$("#diceD"+(i+1)).text(b[i]);
 		}
 		for (var i = 0; i < Math.min(a.length,b.length); i++) {
 			console.log("attack : " + a[i]);
 			console.log("defend : " + b[i]);
+			
 			//If attacker wins
 			if(a[i]>b[i]){
-				gameControl.removeUnits(area2,territory2,1);
-				// self.updateTerritoryUI(area2, territory2);
-				if(gameControl.isDefeated(area2, territory2)){return true;}
+				$("#rollOutcome").text("Win");
+				self.removeUnits(area2,territory2,1);
+				killsAttacker++;
+
+				self.worldDomination(self.getCurrentPlayer().color);
+
 			//Defender wins
 		}else{
-			gameControl.removeUnits(area1,territory1,1);
-			// self.updateTerritoryUI(area1, territory1);
+			killsDefender++;
+			self.removeUnits(area1,territory1,1);
 		}
+
 	};
+
+	$("#atitle").text("ATTACKER Units  : " + self.getUnits(area1,territory1));
+	$("#dtitle").text("DEFENDER Units  : " + self.getUnits(area2,territory2));
+
+	if(self.isDefeated(area2, territory2)){
+		var color = self.getColor(area1, territory1);
+		map.area[area2].territories[territory2].color = color;
+		highlighting.setTerritoriumColor(selection2.id,color)
+		return true;
+	}
+
 	return false;
 
 };
 	//Same as attack but autorolls dices
 	this.attackandroll = function(area1, territory1,units, area2, territory2){
-		if(gameControl.getUnits(area1, territory1)<units || gameControl.getUnits(area1, territory1)==1){
+		if(self.getUnits(area1, territory1)<units || self.getUnits(area1, territory1)==1){
 			//no enough units
 			return;
 		}
 		var defcount = 1;
-		if(gameControl.getUnits(area1, territory1)>1){
+		if(self.getUnits(area2, territory2)>1){
 			defcount = 2;
 		}
-		gameControl.attack(area1, territory1,units, dice.rollMulti(units), area2, territory2, dice.rollMulti(defcount));
+		return self.attack(area1, territory1,units, dice.rollMulti(units), area2, territory2, dice.rollMulti(defcount));
 	};
 	//Returns boolean if 2 territories is adjacent
 	this.isAdjacent = function(area1, territory1, area2, territory2){
-		var adjacent = gameControl.getAdjacent(area1, territory1);
+		var adjacent = self.getAdjacent(area1, territory1);
 		console.log(adjacent);
 		for (var i = 0; i < adjacent.length; i++) {
 			if(adjacent[i].area == area2 && adjacent[i].territory == territory2){
@@ -459,9 +512,9 @@ function gameControl (d,m){
     							// self.updateTerritoryUI(area, territory);
     							data.unitCount[data.turn]--;
     							data.unitsOut++;
-    						
+
     							con.turnComplete();
-    								data.message = messages.deployment + data.unitCount[data.turn];
+    							data.message = messages.deployment + data.unitCount[data.turn];
     							if(data.unitsOut>=data.max[data.playerSize-3]){
     								data.turn = 0;
     								con.nextStartPhase();
@@ -517,7 +570,7 @@ function gameControl (d,m){
     							self.setupTurn();
     							data.startOfTurn=false;
     							
-    							activateDone();
+    							self.activateDone();
     						}
     						return;
     					}
@@ -547,29 +600,48 @@ function gameControl (d,m){
     			//Attack select
     			function (area,territory,obj){
     				if(!selection.isSelected){
+    					if(self.getUnits(area,territory)<2){
+    						alert("not enough untis to attack");
+    						return;
+    					}
+    					if(self.getColor(area,territory) != data.players[data.turn].color){
+    						alert("That's not your territory");
+    						return;
+    					}
     					selection.isSelected = true;
     					selection.area = area;
     					selection.id = '#' + $(obj[0]).attr('id');
     					selection.territory = territory;
-    									//Mark terrotiry
+    					//Mark terrotiry
     					var color = self.getColor(area,territory);
     					highlighting.markAsSelected(selection.id,color);
 
     				}else{
-
-    					alert("Open attack panel");
+    					if(self.getColor(area,territory) == data.players[data.turn].color){
+    						alert("You cant attack yourself silly!");
+    						return;
+    					}
+    					if(!self.isAdjacent(selection.area, selection.territory, area, territory)){
+												//Do alert beforil
+												alert("terriories not adjacent");
+												return false;
+											};
+											selection2.area = area;
+											selection2.id = '#' + $(obj[0]).attr('id');
+											selection2.territory = territory;
+											ui.openAttackPanel(self,self.getUnits(selection.area,selection.territory),self.getUnits(area,territory));
     					// self.attackandroll(area1, territory1,units, area2, territory2)
     					selection.isSelected = false;
-    					//set territory to orignal state
+    					//set territory to orignal state (remove mark)
     					var color = self.getColor(selection.area,selection.territory);
     					highlighting.setTerritoriumColor(selection.id,color);
     				}
 
 
-        				
+
 
     			}
-    	
+
     			,
     			//Achivement
     			function (area,territory,obj){
@@ -578,6 +650,14 @@ function gameControl (d,m){
     			,
     			//Movement 
     			function (area,territory,obj){
+    				if(data.players[data.turn]<1){
+    					alert("you have no movements left");
+    					return;
+    				}
+    				if(self.getColor(area,territory) != self.getCurrentPlayer().color){
+    					alert("Not your territory");
+    					return;
+    				}
     				if(!selection.isSelected){
     					selection.isSelected = true;
     					selection.area = area;
@@ -586,13 +666,26 @@ function gameControl (d,m){
     					var color = self.getColor(area,territory);
     					highlighting.markAsSelected('#' + $(obj[0]).attr('id'),color);
     				}else{
-    					alert("open movement panel");
-    					var color = self.getColor(selection.area,selection.territor);
+    					if(!self.isAdjacent(selection.area, selection.territory, area, territory)){
+												//Do alert beforil
+												alert("terriories not adjacent");
+												return false;
+											};
+											selection2.area = area;
+											selection2.territory = territory;
+											selection2.id = '#' + $(obj[0]).attr('id');
+											selection.isSelected = false;
+											ui.openMovePanel(self);
+    					//set territory to orignal state (remove mark)
+    					var color = self.getColor(selection.area,selection.territory);
     					highlighting.setTerritoriumColor(selection.id,color);
+
     				}
     			},
-    	
+
     			];
+
+    			// this metods runs everytime the map is clicked, in some sense the gameloop
     			this.territoryClick = function(obj){
     				var pos = $(obj[0]).attr('title').split(" ");
     				var area = parseInt(pos[0]);
@@ -612,9 +705,9 @@ function gameControl (d,m){
 
     				//gamephase
     			}else{
-    					gameFunctions[data.gamePhase](area,territory,obj);
+    				gameFunctions[data.gamePhase](area,territory,obj);
 
-    		
+
     				
     			}
     			setTimeout(function(){
@@ -626,11 +719,13 @@ function gameControl (d,m){
 
 
     		}
+    		//Updates scorepanel
     		this.updateScorePanel = function(){
     			ui.setTurn(self.getCurrentPlayer());
     			ui.setPhase(self.getCurrentPhase());
     			ui.setMessage(self.getCurrentMessage());
     		}
+    		//Updates the map UI
     		this.updateTerritoryUI = function(){
 
     			for (var i = 0; i < map.area.length; i++) {
@@ -649,7 +744,7 @@ function gameControl (d,m){
 
 
     		};
-
+    		//
     		this.setupTurn = function(){
     			data.unitCount[data.turn] += self.countReinforcement();
     			self.setMessage("Reinforcement: " + data.unitCount[data.turn]);
@@ -681,20 +776,48 @@ function gameControl (d,m){
 
     			};
 
-    			reinforcement += (bonus/3);
+    			reinforcement += Math.floor(bonus/3);
+    			if(reinforcement<3){
+    				reinforcement=3;
+    			}
     			return reinforcement;
     		}
-    		function activateDone(){
+    		//Metods thats sets up the game after the predeploymentphase
+    		this.activateDone = function (){
+    			ui.addInputPanel();
     			$("#btnDone").bind('click',function(){
     				self.nextGamePhase();
     				if(data.gamePhase == 0){
+
     					self.turnComplete();
+    					data.players[data.turn].moves=1;
+    					self.setupTurn();
+    				}
+    				if(data.gamePhase == 1){
+    					data.message = "Click on territories to do attacks(Select and target)";
     				}
     				if(data.gamePhase ==2){
     					alert("show achivements");
+    					data.message = "Click on a territory to show achivements";
     				}
     				self.updateScorePanel();
+    				if(data.gamePhase ==3){
+    					data.message = "Movements left: " + data.players[data.turn].moves;
+    				}
     			});
+    		}
+    		//Check if the world is dominated by color
+    		this.worldDomination = function(color){
+    			var bonus = 0;
+    			for (var i = 0; i < map.area.length; i++) {
+    				for (var j = 0; j < map.area[i].territories.length; j++) {
+    					if(map.area[i].territories[j].color != color){
+    						return false;
+    					}
+    				};
+
+    			};
+    			alert("GAME OVER, Player " + getCurrentPlayer.name + " wins the game!" );
     		}
 
     	}
@@ -721,39 +844,30 @@ var gameData = {
 	map : null,
 	//Starting units for number of players -> 3, 4 ,5 , 6
 	startUnits : [5,25,20,15],
+	//Units out playing
 	unitsOut :0,
+	//Maximum units at start for different number of players
 	max : [5*3,25*4,20*5,15*6],
-	message : "",
+	//current message
+	message : "   ",
 	startOfTurn : true,
-	messages : 
-	{
-		Deployment : "Reinforcement left: ",
-
-	}
-
+	attacking : 0,
 
 
 }
 var players = [
-{color: "AA00FF", race : "zerg", name: "", taken: false},
-{color: "FF6D00", race : "protoss", name: "", taken: false},
-{color: "2962FF", race : "terran", name: "", taken: false},
-{color: "D50000", race : "terran", name: "", taken: false},
-{color: "FFEB3B", race : "protoss", name: "", taken: false},
-{color: "795548", race : "zerg", name: "", taken: false}
+{color: "AA00FF", race : "zerg", name: "", taken: false, moves : 0},
+{color: "FF6D00", race : "protoss", name: "", taken: false, moves : 0},
+{color: "2962FF", race : "terran", name: "", taken: false, moves : 0},
+{color: "D50000", race : "terran", name: "", taken: false, moves : 0},
+{color: "FFEB3B", race : "protoss", name: "", taken: false, moves : 0},
+{color: "795548", race : "zerg", name: "", taken: false, moves : 0}
 ]
 var player = {
 	name : null,
 	faction : null,
 }
-var mapskelleton = {
-	size: null,
-	premade: false,
-	area : new Array(),
-}
-var territorySkelleton = {
-	name : null, color : null, hero : false, units : 0, adjacent : [{area : 0, territory : 0}] 
-}
+//Map data
 var freemap = {
 		order : null,
 		size : null,
@@ -765,30 +879,30 @@ var freemap = {
 			bonus : 7,
 			territories : [
 			{ name : "Char aleph", color : "", hero : false, units : 0, middle:[89,103], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Glass flats", color : "", hero : false, units : 0 , middle:[183,90], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Burning rift", color : "", hero : false, units : 0 , middle:[168,135], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Death valley", color : "", hero : false, units : 0 , middle:[243,111], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Bone trench", color : "", hero : false, units : 0 , middle:[282,159], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Dauntless plateau", color : "", hero : false, units : 0 , middle:[285,215], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Hells gates", color : "", hero : false, units : 0 , middle:[252,282], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Nydus network", color : "", hero : false, units : 0 , middle:[204,236], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Primary hive cluster", color : "", hero : false, units : 0 , middle:[145,212], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Acid marsh", color : "", hero : false, units : 0 , middle:[93,195], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Eris", color : "", hero : false, units : 0 , middle:[193,318], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Ate", color : "", hero : false, units : 0, middle:[343,264], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] }
+			{ name : "Glass flats", color : "", hero : false, units : 0 , middle:[183,90], adjacent : [{area : 0, territory : 0}, {area : 0, territory : 2},{area : 0, territory : 3}]},
+			{ name : "Burning rift", color : "", hero : false, units : 0 , middle:[168,135], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 3},{area : 0, territory : 8},{area : 0, territory : 0}]},
+			{ name : "Death valley", color : "", hero : false, units : 0 , middle:[243,111], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 7},{area : 0, territory : 4}]},
+			{ name : "Bone trench", color : "", hero : false, units : 0 , middle:[282,159], adjacent : [{area : 0, territory : 3}, {area : 0, territory : 7},{area : 0, territory : 5}]},
+			{ name : "Dauntless plateau", color : "", hero : false, units : 0 , middle:[285,215], adjacent : [{area : 0, territory : 4}, {area : 0, territory : 6},{area : 0, territory : 7}]},
+			{ name : "Hells gates", color : "", hero : false, units : 0 , middle:[252,282], adjacent : [{area : 0, territory : 5}, {area : 0, territory : 7},{area : 0, territory : 10}]},
+			{ name : "Nydus network", color : "", hero : false, units : 0 , middle:[204,236], adjacent : [{area : 0, territory : 8}, {area : 0, territory : 3},{area : 0, territory : 4},{area : 0, territory : 5},{area : 0, territory : 6},{area : 0, territory : 10}]},
+			{ name : "Primary hive cluster", color : "", hero : false, units : 0 , middle:[145,212], adjacent : [{area : 0, territory : 0}, {area : 0, territory : 2},{area : 0, territory : 7},{area : 0, territory : 9}]},
+			{ name : "Acid marsh", color : "", hero : false, units : 0 , middle:[93,195], adjacent : [{area : 0, territory : 0}, {area : 0, territory : 8}]},
+			{ name : "Eris", color : "", hero : false, units : 0 , middle:[193,318], adjacent : [{area : 0, territory : 7}, {area : 0, territory : 6},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Ate", color : "", hero : false, units : 0, middle:[343,264], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 3, territory : 0}] }
 			]
 		},
 		{
 			name : "Korhal",
 			bonus : 5,
 			territories : [
-			{ name : "Wolfrec province", color : "", hero : false, units : 0, middle:[395,58], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Keresh province", color : "", hero : false, units : 0 , middle:[465,125], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Augustgrad", color : "", hero : false, units : 0 , middle:[374,143], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Radiated wastes", color : "", hero : false, units : 0 , middle:[319,158], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Ruins of styrling", color : "", hero : false, units : 0 , middle:[386,219], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Ursa", color : "", hero : false, units : 0, middle:[487,233], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Canis", color : "", hero : false, units : 0 , middle:[511,64], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Wolfrec province", color : "", hero : false, units : 0, middle:[395,58], adjacent : [{area : 1, territory : 3}, {area : 1, territory : 2},{area : 1, territory : 1},{area : 0, territory : 6}] },
+			{ name : "Keresh province", color : "", hero : false, units : 0 , middle:[465,125], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 2},{area : 1, territory : 5},{area : 1, territory : 6}]},
+			{ name : "Augustgrad", color : "", hero : false, units : 0 , middle:[374,143], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 1},{area : 1, territory : 2},{area : 1, territory : 3},{area : 1, territory : 4},{area : 1, territory : 5}]},
+			{ name : "Radiated wastes", color : "", hero : false, units : 0 , middle:[319,158], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 2},{area : 1, territory : 4},{area : 0, territory : 11}]},
+			{ name : "Ruins of styrling", color : "", hero : false, units : 0 , middle:[386,219], adjacent : [{area : 1, territory : 3}, {area : 1, territory : 2},{area : 1, territory : 5},{area : 0, territory : 11},{area : 4, territory : 4}]},
+			{ name : "Ursa", color : "", hero : false, units : 0, middle:[487,233], adjacent : [{area : 1, territory : 1}, {area : 1, territory : 2},{area : 1, territory : 4},{area : 4, territory : 5}]},
+			{ name : "Canis", color : "", hero : false, units : 0 , middle:[511,64], adjacent : [{area : 1, territory : 0}, {area : 1, territory : 1},{area : 2, territory : 0}]},
 			]
 
 		},
@@ -796,16 +910,16 @@ var freemap = {
 			name : "Aiur",
 			bonus : 5,
 			territories : [
-			{ name : "Saalok", color : "", hero : false, units : 0, middle:[579,142], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Temple of the preservers", color : "", hero : false, units :0 , middle:[572,224], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "The great forum", color : "", hero : false, units : 0 , middle:[602,266], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Antioch province", color : "", hero : false, units : 0, middle:[655,300], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Scion province", color : "", hero : false, units : 0 , middle:[671,254], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Remains of the overmind", color : "", hero : false, units : 0 , middle:[696,217], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Feral hives", color : "", hero : false, units : 0 , middle:[695,170], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Saalok", color : "", hero : false, units : 0, middle:[579,142], adjacent : [{area : 2, territory : 1}, {area : 2, territory : 7},{area : 2, territory : 8},{area : 1, territory : 6}] },
+			{ name : "Temple of the preservers", color : "", hero : false, units :0 , middle:[572,224], adjacent : [{area : 2, territory : 0}, {area : 2, territory : 7},{area : 2, territory : 2}]},
+			{ name : "The great forum", color : "", hero : false, units : 0 , middle:[602,266], adjacent : [{area : 2, territory : 1}, {area : 2, territory : 4},{area : 2, territory : 7},{area : 2, territory : 3}]},
+			{ name : "Antioch province", color : "", hero : false, units : 0, middle:[655,300], adjacent : [{area : 2, territory : 2}, {area : 2, territory : 4},{area : 5, territory : 2}]},
+			{ name : "Scion province", color : "", hero : false, units : 0 , middle:[671,254], adjacent : [{area : 2, territory : 2}, {area : 2, territory : 3},{area : 2, territory : 5},{area : 2, territory : 5}]},
+			{ name : "Remains of the overmind", color : "", hero : false, units : 0 , middle:[696,217], adjacent : [{area : 2, territory : 4}, {area : 2, territory : 7},{area : 2, territory : 8},{area : 2, territory : 6}]},
+			{ name : "Feral hives", color : "", hero : false, units : 0 , middle:[695,170], adjacent : [{area : 2, territory : 5}, {area : 2, territory : 8},{area : 0, territory : 0}]},
 
-			{ name : "Velari province", color : "", hero : false, units : 0 , middle:[624,196], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false, middle:[643,159], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Velari province", color : "", hero : false, units : 0 , middle:[624,196], adjacent : [{area : 2, territory : 1}, {area : 2, territory : 0},{area : 2, territory : 8},{area : 2, territory : 5},{area : 2, territory : 4},{area : 2, territory : 2}]},
+			{ name : "Citadel of the executor", color : "", hero : false, units : 0 , base : false, middle:[643,159], adjacent : [{area : 2, territory : 0}, {area : 2, territory : 6},{area : 2, territory : 5},{area : 2, territory : 7}]},
 
 			]
 		},
@@ -814,10 +928,10 @@ var freemap = {
 			name : "Zerus",
 			bonus : 2,
 			territories : [
-			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false, middle:[187,393], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Sun valley", color : "", hero : false, units : 0 , middle:[215,434], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Fulmic highlands", color : "", hero : false, units : 0 , middle:[144,438], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Volatile cleft", color : "", hero : false, units : 0 , middle:[193,484], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]}
+			{ name : "The eternal scar", color : "", hero : false, units : 0, base : false, middle:[187,393], adjacent : [{area : 0, territory : 10}, {area : 3, territory : 2},{area : 3, territory : 1}] },
+			{ name : "Sun valley", color : "", hero : false, units : 0 , middle:[215,434], adjacent : [{area : 3, territory : 0}, {area : 3, territory : 2},{area : 3, territory : 3}]},
+			{ name : "Fulmic highlands", color : "", hero : false, units : 0 , middle:[144,438], adjacent : [{area : 3, territory : 1}, {area : 3, territory : 0},{area : 3, territory : 3}]},
+			{ name : "Volatile cleft", color : "", hero : false, units : 0 , middle:[193,484], adjacent : [{area : 3, territory : 1},{area : 3, territory : 2}]}
 			]
 		},
 		//4
@@ -825,22 +939,22 @@ var freemap = {
 			name : "Mar sara",
 			bonus : 3,
 			territories : [
-			{ name : "Thisby", color : "", hero : false, units : 0, middle:[313,465], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Backwater station", color : "", hero : false, units : 0, base : false , middle:[387,445], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Diamondback wastelands", color : "", hero : false, units : 0, middle:[350,366], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Riksville", color : "", hero : false, units : 0, middle:[452,411], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Jacobs installation", color : "", hero : false, units : 0 , middle:[404,314], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Pyramus", color : "", hero : false, units : 0 , middle:[484,346], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
+			{ name : "Thisby", color : "", hero : false, units : 0, middle:[313,465], adjacent : [{area : 4, territory : 1}, {area : 4, territory : 2}] },
+			{ name : "Backwater station", color : "", hero : false, units : 0, base : false , middle:[387,445], adjacent : [{area : 4, territory : 0}, {area : 4, territory : 2},{area : 4, territory : 3}]},
+			{ name : "Diamondback wastelands", color : "", hero : false, units : 0, middle:[350,366], adjacent : [{area : 4, territory : 1}, {area : 4, territory : 0},{area : 4, territory : 4},{area : 4, territory : 3},{area : 4, territory : 5},{area : 0, territory : 11}] },
+			{ name : "Riksville", color : "", hero : false, units : 0, middle:[452,411], adjacent : [{area : 4, territory : 1}, {area : 4, territory : 2},{area : 4, territory : 5}] },
+			{ name : "Jacobs installation", color : "", hero : false, units : 0 , middle:[404,314], adjacent : [{area : 4, territory : 2}, {area : 4, territory : 5},{area : 0, territory : 11},{area : 1, territory : 4}]},
+			{ name : "Pyramus", color : "", hero : false, units : 0 , middle:[484,346], adjacent : [{area : 4, territory : 4}, {area : 4, territory : 2},{area : 4, territory : 3},{area : 1, territory : 4},{area : 1, territory : 5}]},
 			]
 		},
 		{
 			name : "Shakuras",
 			bonus : 2,
 			territories : [
-			{ name : "Rajal", color : "", hero : false, units : 0, base : false, middle:[559,483], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] },
-			{ name : "Katuul province", color : "", hero : false, units : 0 , middle:[581,408], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Talematros", color : "", hero : false, units :0 , middle:[640,372], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}]},
-			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0, middle:[639,446], adjacent : [{area : 0, territory : 1}, {area : 0, territory : 2},{area : 0, territory : 8},{area : 0, territory : 9}] }
+			{ name : "Rajal", color : "", hero : false, units : 0, base : false, middle:[559,483], adjacent : [{area : 5, territory : 1},{area : 5, territory : 3}] },
+			{ name : "Katuul province", color : "", hero : false, units : 0 , middle:[581,408], adjacent : [{area : 5, territory : 2}, {area : 5, territory : 3},{area : 5, territory : 0},{area : 4, territory : 5}]},
+			{ name : "Talematros", color : "", hero : false, units :0 , middle:[640,372], adjacent : [{area : 5, territory : 1}, {area : 5, territory : 3},{area : 2, territory : 3}]},
+			{ name : "Xelnaga temple grounds", color : "", hero : false, units : 0, middle:[639,446], adjacent : [{area : 5, territory : 0}, {area : 5, territory : 1},{area : 5, territory : 2}] }
 			]
 		}
 		]
@@ -1017,6 +1131,7 @@ var highlighting = {
 
 	         });
 
+
 var messages = {
 	deployment : "Reforcements :",
 	selectAttack : "Click on a friendly territory to select",
@@ -1027,7 +1142,7 @@ var paneldata ={
 		title : "Choose number of players",
 	},
 	playerID : {
-		title : "Each player rolls a dice, highest writes in their name first"
+		title : "Enter name and race"
 	}
 };
 
@@ -1036,28 +1151,32 @@ var panel = {
 	startpanel : function(control){
 		console.log("startpanel");
 
-		$("body").append("<div class='panel' id='players'></div>");
-		$("#players").append("<h1></<h1>");
+		$("body").append("<div class='panelTop' id='playersTop'></div>");
+		$("body").append("<div class='panelBottom' id='playersBottom'></div>");
+		$("#playersTop").append("<h1></<h1>");
 
-		panel.addPanel("#players", function(){
-			$("#players h1").text(paneldata.numberOfPlayers.title);
+		panel.fadeIn("#playersTop", function(){
+			$("#playersTop h1").text(paneldata.numberOfPlayers.title);
+		});
+		panel.fadeIn("#playersBottom", function(){
 
-			$("#players").append("<input type='button' class='btnPlayers' value='2'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='3'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='4'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='5'/>");
-			$("#players").append("<input type='button' class='btnPlayers' value='6'/>");
+
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='3'/>");
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='4'/>");
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='5'/>");
+			$("#playersBottom").append("<input type='button' class='btnPlayers btnStyle' value='6'/>");
 
 		});
 		//action for selection of player size
 		$(".btnPlayers").bind('click', function(){
-
+			console.log('click');
 				//record number of players 
 				control.setPlayerSize(parseInt(this.value));
 				control.setPlayers(players.slice(0,parseInt(this.value)));
-				panel.removePanel("#players",function(){});
-				$("#players").remove();
-				panel.playerPanel(control);
+				panel.fadeOut("#playersTop *", function(){$('#playersTop *').html('');});
+				panel.fadeOut(".panelBottom *", function(){	$('.panelBottom *').remove(); panel.playerPanel(control);});
+
+				
 
 			});
 	},
@@ -1065,22 +1184,23 @@ var panel = {
 	playerPanel : function(control){
 		console.log("playerpanel");
 
-		$("body").append("<div class='panel' id='playerIds'></div>");
-		$("#playerIds").append("<h1></<h1>");
-		$("#playerIds h1").text(paneldata.playerID.title);
+		$("#playersTop").append("<h1 id='playerTitle'><h1>");
+		$("#playerTitle").text(paneldata.playerID.title);
+		$("#playersTop *").css('opacity','0')
+		panel.fadeIn("#playersTop *", function(){});
 
-		panel.addPanel("#playerIds", function(){
+
 		console.log(control.getGameData());
-			for (var i = 1; i <= control.getPlayerSize(); i++) {
-				var value = "Player" + i;
+		for (var i = 1; i <= control.getPlayerSize(); i++) {
+			var value = "Player" + i;
 
-				var color = players[i-1].color;
+			var color = players[i-1].color;
 
-				$("#playerIds").append('<input id="player'+color+'" type="text" style="width:100px">');
-				$("#player"+color).val(value);
-				$("#playerIds").append('<img id="terranimg'+i+'" class="raceicon playerrow'+i+'"src="img/terran.jpg"/>');
-				$("#playerIds").append('<img id="protossimg'+i+'" class="raceicon playerrow'+i+'"src="img/protoss.jpg"/>');
-				$("#playerIds").append('<img id="zergimg'+i+'" class="raceicon playerrow'+i+'"src="img/zerg.jpg"/>');
+			$("#playersBottom").append('<input id="player'+color+'" type="text" class="pplay inputPlayer" style="width:100px">');
+			$("#player"+color).val(value);
+			$("#playersBottom").append('<img id="terranimg'+i+'" class="raceicon playerrow'+i+' terran pplay"src="img/terran.png"/>');
+			$("#playersBottom").append('<img id="protossimg'+i+'" class="raceicon playerrow'+i+' pplay"src="img/protoss.jpg"/>');
+			$("#playersBottom").append('<img id="zergimg'+i+'" class="raceicon playerrow'+i+' pplay"src="img/zerg.png"/>');
 				//Click on  img
 				$(".playerrow"+i).bind('click',function(){
 
@@ -1092,15 +1212,19 @@ var panel = {
 					control.setPlayerRace(num,id.split('img')[0]);
 
 				});
+				if(i>3){
+					$("#playersBottom").append('<br/>');
+				}
 
-				$("#playerIds").append('<Br/>');
 			};
 
-			$("#playerIds").append('<Br/>');
+
 			//Button and action to finish 
-			$("#playerIds").append('<input id="btnPlayerDone" type="button" value="Done"  style="width:100px">');
+			$("#playersBottom").append('<br/>');
+			$("#playersBottom").append('<input id="btnPlayerDone" class="btnStyle" type="button" value="Done"  style="width:100px">');
 
 			$("#btnPlayerDone").bind('click',function(){
+				console.log("Done");
 				//Check that all players has chosen a race;
 				for (var i = 1; i <= control.getPlayerSize(); i++) {
 					var color = control.getPlayerColor(i-1);
@@ -1112,37 +1236,172 @@ var panel = {
 					}
 					control.setPlayerName(i-1,name);
 				};
-		// Launch game;
-		panel.removePanel("#playerIds",function(){
-			$("#playerIds").remove();
-			gameLoop(control);
-		});
-	});
+
+				$('<div id="boardContainer"></div>').insertAfter("#playersTop");
+				$("#boardContainer").append(boardImg);
+
+				panel.open(function(){
+					$("#playersTop *").remove();
+					$("#playersBottom *").remove();
+					gameLoop(control);
+				});
+			});
+			$("#playersTop *").css('opacity','0')
+			panel.fadeIn("#playersBottom *", function(){	});
 
 
-		});
+		},
 
-},
-
-removePanel : function(id,callback){
-	console.log("removing panel ...");
-	$(id).animate({
+		fadeOut : function(id,callback){
+			console.log("removing panel ...");
+			$(id).animate({
 			//genomskinlighet
 			'opacity': 0.0,
-			// 'margin-top' : (parseInt($(id).parent().css('height')) - parseInt($(id).css('width'))) + 'px'
-		}, 4000, callback());
-},
+		}, 3000, callback());
+		},
 
-addPanel : function(id,callback){
-	console.log("adding panel " + id);
-	$(id).animate({
+		fadeIn : function(id,callback){
+			console.log("adding panel " + id);
+			$(id).animate({
 			//genomskinlighet
 			'opacity': 100.0,
-			//'margin-left' : (parseInt($(id).parent().css('width')) - parseInt($(id).css('width')))/3 + 'px'
 
-		}, 4000, callback());
+		}, 5000, callback());
 	/*$(id).addClass('load');
 	callback();*/
+},
+slideUp : function(id,callback){
+	$(id).animate({
+
+		'marginTop': "-=270px",
+	}, 3000, callback());
+},
+slideDown : function(id,callback){
+	$(id).animate({
+
+		'marginTop': "+=270px",
+	}, 3000, callback());
+},
+open : function(callback){
+	$("#playersTop").animate({
+		'marginTop': "-=300px",
+	}, { duration: 2000, queue: false });
+	$("#playersBottom").animate({
+
+		'marginTop': "+=270px",
+	},{ duration: 2000, queue: false });
+	$("#boardContainer").animate({
+
+		'marginTop': "-=270px",
+		'height' : "+=540px",
+	}, { duration: 2000, queue: false });
+	callback();
+},
+close : function(){
+	$("#playersTop").animate({
+		'marginTop': "+=300px",
+	}, { duration: 2000, queue: false });
+	$("#playersBottom").animate({
+
+		'marginTop': "-=270px",
+	},{ duration: 2000, queue: false });
+	$("#boardContainer").animate({
+
+		'marginTop': "+=270px",
+		'height' : "-=540px",
+	}, { duration: 2000, queue: false });
+
+},
+attack : function(ui,control,attackunits,defunits){
+	$("#playersTop").append("<div id='attackTitle'>");
+	$("#attackTitle").append("<h2 id='atitle' class='attacker'>ATTACKER Units: "+attackunits+"</h2>");
+	$("#attackTitle").append("<h3 id='attackerOutcome'  class='attacker'>");
+	$("#attackTitle").append("<h2 id='dtitle' class='defender'>DEFENDER Units: "+defunits+"</h2>");
+	$("#attackTitle").append("<h3 id='defenderOutcome' class='defender'>");;
+	$("#playersTop").append("<br/>");
+	$("#playersTop").append("<div id='dices'>");
+	$("#dices").append("<h3  class='attacker' >Attack roll--></>");
+	$("#dices").append("<h3 id='diceA1' class='dice attacker'/>");
+	$("#dices").append("<h3 id='diceA2'class='dice attacker'/>");
+	$("#dices").append("<h3 id='diceA3'class='dice attacker'/>");
+	$("#dices").append("<h3 class='defender'><--Defend roll</>");
+	$("#dices").append("<h3 id='diceD1'class='dice defender'/>");
+	$("#dices").append("<h3 id='diceD2'class='dice defender'/>");
+	$("#playersBottom").append('<div id="unitsContainer"/>');
+	$('#unitsContainer').append("<button id='btnSub' class='btnStyle btnA' >-</button>");
+	$('#unitsContainer').append("<h1 id='attackingUnits' class='btnA'>1</h1>");
+	$('#unitsContainer').append("<button id='btnAdd' class='btnStyle'btnA >+</button>");
+	$('#playersBottom').append("<br/>");
+	$('#playersBottom').append("<button id='btnRoll' class='btnStyle' >Roll!</button>");
+	$('#playersBottom').append("<button id='btnEndBattle' class='btnStyle' >End</button>");
+
+	var win = false;
+	$('#btnRoll').bind('click', function(){
+		console.log("ROLLING ROLLING");
+		var value =	parseInt($('#attackingUnits').text());
+		$('#attackingUnits').text(1);
+		if(control.reciveAttack(value)){
+			 $('#btnRoll').prop("disabled",true);
+ 			$('#btnEndBattle').prop("disabled",true);
+			setTimeout(function(){
+				panel.fadeOut("#playersTop *",function(){
+
+
+					$('#playersTop *').remove();
+					$('#btnRoll').remove();
+					$('#attackingUnits').text(1)
+					$('#playersTop').append("<h1 class='attacker'>You won! Enter transfer size and press end to return</h1>");			
+					win = true;
+					$('#btnEndBattle').prop("disabled",false);
+				});
+
+			}, 3000);
+
+
+		}
+	});
+	$('#btnAdd').bind('click', function(){
+		var value =	parseInt($('#attackingUnits').text());
+		if(control.maxAttack(value)){
+			alert("You dont have so many units");
+			return;
+		}
+		if(value > 3){
+			alert("Maxmium units per attack is 3");
+			return;
+		}
+		$('#attackingUnits').text(''+(value+1) );
+	});
+	$('#btnSub').bind('click', function(){
+		var value =	parseInt($('#attackingUnits').text());
+		if(value==1){
+			alert("You must attack with at least one unit");
+			return;
+		};
+		$('#attackingUnits').text(''+(value-1) );
+	});
+	$('#btnEndBattle').bind('click', function(){
+		panel.fadeOut("#playersTop *",function(){});
+		panel.fadeOut("#playersBottom *",function(){
+			if(win){
+				var val = parseInt($('#attackingUnits').text());
+				control.winTransfer(val);
+				win=false;
+			}
+
+			panel.open(function(){
+				
+				$('#playersTop *').remove();
+				$('#playersBottom *').remove();
+				ui.addInfoPanel();
+				control.updateScorePanel();
+				control.updateTerritoryUI();
+				control.activateDone();
+			});
+		});
+
+	});
+
 },
 territoriumPanel : function(territorium,id){
 	var temp = id.split(" ");
@@ -1245,10 +1504,6 @@ function UIControl(c){
 	this.myCanvas;
 	this.control = c;
 
-	$("body").empty();
-	$("body").css('background-image', 'none');
-	$("body").css("background-color","#000011");
-
 
 	this.setTurn = function(player){
 		$('#titleTurn').text(player.name);
@@ -1262,7 +1517,7 @@ function UIControl(c){
 	}
 
 	this.addInfoPanel = function(){
-		$("body").append('<div id="scorepanel"></div>');
+		$("#playersTop").append('<div id="scorepanel"></div>');
 		// $("#scorepanel").append('<div id="score1"></div>');
 		$("#scorepanel").append("<h1 id='titleTurn' class='score'></h1>");
 		// $("#scorepanel").append('<div id="score2"></div>');
@@ -1315,8 +1570,7 @@ function UIControl(c){
 };
 
 this.addBoard = function(){
-	$("body").append('<div id="boardContainer"></div>');
-	$("#boardContainer").append(boardImg);
+
 	$("#boardContainer").append(map);
 	for (var i = 0; i < 42; i++) {
 		$("#Map").append($(area1[i]).attr('id','terr' + i));
@@ -1340,17 +1594,85 @@ this.addBoard = function(){
 
 
     	this.addBoard();
-    	this.addInputPanel();
 	//Create canvas with the device resolution.
 	// selfmyCanvas = createHiDPICanvas(800, 540);
 	// this.addOverlayCanvas();
 }
 
 this.addInputPanel = function(){
-	$("body").append('<div id="inputpanel"></div>');
 	
-	$("#inputpanel").append('<div id="input1"></div>');
-	$("#input1").append("<button id='btnDone' class='score' >Done</button>");
+	$("#playersBottom").append('<div id="input1"></div>');
+	$("#input1").append("<button id='btnDone' class='score btnStyle' >Done</button>");
+	panel.fadeIn("#btnDone",function(){});
+}
+this.openAttackPanel = function(control,attackunits,defunits){
+	panel.close();
+	panel.fadeOut("#btnDone",function(){
+		$("#btnDone").remove();
+
+	});
+	panel.fadeOut("#playersTop *",function(){
+		$("#playersTop *").remove();
+		panel.attack(self,control,attackunits,defunits);
+
+	});
+
+
+}
+this.openMovePanel = function(control){
+	panel.close();
+	panel.fadeOut("#btnDone",function(){
+		$("#btnDone").remove();
+
+	});
+	panel.fadeOut("#playersTop *",function(){
+		$("#playersTop *").remove();
+		
+		$("#playersTop").append("<h1>Movement</h1>");
+
+		$("#playersBottom").append('<div id="unitsContainer"/>');
+		$('#unitsContainer').append("<button id='btnSub' class='btnStyle btnA' >-</button>");
+		$('#unitsContainer').append("<h1 id='attackingUnits' class='btnA'>1</h1>");
+		$('#unitsContainer').append("<button id='btnAdd' class='btnStyle'btnA >+</button>");
+		$('#playersBottom').append("<button id='btnEndBattle' class='btnStyle' >End</button>");
+		$('#btnAdd').bind('click', function(){
+			var value =	parseInt($('#attackingUnits').text());
+			if(control.maxAttack(value)){
+				alert("You dont have so many units");
+				return;
+			}
+			$('#attackingUnits').text(''+(value+1) );
+		});
+		$('#btnSub').bind('click', function(){
+			var value =	parseInt($('#attackingUnits').text());
+			if(value==1){
+				alert("You must transfer atlest one unit");
+				return;
+			};
+			$('#attackingUnits').text(''+(value-1) );
+		});
+		$('#btnEndBattle').bind('click', function(){
+			panel.fadeOut("#playersTop *",function(){});
+			panel.fadeOut("#playersBottom *",function(){
+		
+					var val = parseInt($('#attackingUnits').text());
+					control.winTransfer(val);
+					control.getCurrentPlayer().moves--;
+				
+
+				panel.open(function(){
+
+					$('#playersTop *').remove();
+					$('#playersBottom *').remove();
+					self.addInfoPanel();
+					control.updateScorePanel();
+					control.updateTerritoryUI();
+					control.activateDone();
+				});
+			});
+
+		});
+	});
 }
 this.drawTerritoryStats = function(x, y, units,base,hero,color){
 	console.log("APPENDING " +base);
@@ -1359,7 +1681,7 @@ this.drawTerritoryStats = function(x, y, units,base,hero,color){
 // 	'left' :'x'
 // })
 
-	var ctx = $("#boardContainer div canvas")[0].getContext("2d");
+var ctx = $("#boardContainer div canvas")[0].getContext("2d");
          // var ctx = c;
       // ctx.clearRect ( x-7 , y-22 ,35,35);
       // ctx.fillRect(x-7 , y-22 ,35,35);
@@ -1377,21 +1699,21 @@ this.drawTerritoryStats = function(x, y, units,base,hero,color){
       	ctx.stroke();
       }
 
- 
+
 
       if(hero==true){
       	ctx.fillStyle = '#FFD700';
       }else{
-      	      ctx.fillStyle = 'white';
+      	ctx.fillStyle = 'white';
       }
       if(units != 0 || units != null){
-           ctx.beginPath();
-      ctx.font = "15px Sans-serif"
+      	ctx.beginPath();
+      	ctx.font = "15px Sans-serif"
 
-      ctx.fillText(units, x, y);
-            	ctx.lineWidth = 1;
-      ctx.strokeStyle = '#003300';
-      ctx.stroke();
+      	ctx.fillText(units, x, y);
+      	ctx.lineWidth = 1;
+      	ctx.strokeStyle = '#003300';
+      	ctx.stroke();
 
       }
 
