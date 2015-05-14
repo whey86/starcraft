@@ -11,7 +11,7 @@ First choose the number of players
 ![Number of players](https://github.com/whey86/starcraft/blob/master/screens/1.png?raw=true)
 ### Enter player names and race
 Diffrent races has diffrent achivements
-
+![Race and name](https://github.com/whey86/starcraft/blob/master/screens/1.png?raw=true)
 ## The game
 The game is turnbased game and each player will do diffrent actions on each phase. All the phases can be divided into two blocks, prephases and gamephases. 
 
@@ -19,16 +19,21 @@ The game is turnbased game and each player will do diffrent actions on each phas
 In the start of the game you place your starting units etc which will be explained below.
 
 1. Place your base
+![Base](https://github.com/whey86/starcraft/blob/master/screens/3.png?raw=true)
+The circle represents your base which gives +1 unit
 2. Place your intial units
 3. place your hero 
+Text becomes gold colored where the hero is.
 
 ### GamePhases
 The gamephases will be repeted until someone has won the game.
 
 1. Deploy reinforcement
 2. Attack
+![Attack](https://github.com/whey86/starcraft/blob/master/screens/4.png?raw=true)
 3. Achivement
 4. Movement
+![Movement](https://github.com/whey86/starcraft/blob/master/screens/5.png?raw=true)
 
 
 
